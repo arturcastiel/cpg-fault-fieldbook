@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cpg-fault-fieldbook"
+version = "0.1.0"
+description = "Runnable, source-linked field guide to corner-point grids and fault projection"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0-or-later"}
+dependencies = ["cpg2unstructured==0.2.0", "fault-projections==0.1.0"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+docs = ["mkdocs>=1.5,<2"]
+
+[project.scripts]
+cpg-fieldbook = "fieldbook.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["fieldbook*"]
+
+[tool.setuptools.package-data]
+fieldbook = ["data/*.grdecl", "data/*.EGRID"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

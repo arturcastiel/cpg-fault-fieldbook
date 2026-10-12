@@ -1,0 +1,12 @@
+# Tested source revisions; package-version constraints alone do not pin source.
+[cpg2unstructured]
+repository = "https://github.com/arturcastiel/cpg2python"
+local_directory = "../cpg2python"
+revision = "e4637ccedf82c82f5c081bb909b354a7b919c6be"
+version = "0.2.0"
+
+[fault_projections]
+repository = "https://github.com/arturcastiel/fault-projections"
+local_directory = "../fault-projections"
+revision = "0837f07dd97961d2e5e92b26fd0dea7f7d8e3291"
+version = "0.1.0"

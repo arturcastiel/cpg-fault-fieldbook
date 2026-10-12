@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Corner-point grids and fault-driven mesh adaptation | Field guide</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6;color:#192435;background:#f7f9fc}
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0}
+    a{color:#075da7;text-underline-offset:3px} a:hover{text-decoration-thickness:2px}
+    .layout{display:grid;grid-template-columns:minmax(14rem,18rem) minmax(0,75rem);max-width:105rem;margin:auto;gap:2rem}
+    aside{position:sticky;top:0;max-height:100vh;overflow:auto;padding:1.5rem 1rem;border-right:1px solid #d8e0ea}
+    aside a{display:block;padding:.23rem .5rem;border-radius:.35rem;text-decoration:none}
+    aside a:hover,aside a:focus{background:#e6eefb}
+    main{padding:2rem 2rem 6rem 0;min-width:0}
+    header{background:#102841;color:#f8fbff;padding:2rem;border-radius:1rem}
+    header a{color:#b6dcff} h1{font-size:clamp(2rem,4vw,3.4rem);line-height:1.12;margin:.3rem 0}
+    h2{margin-top:3.5rem;border-bottom:2px solid #d8e0ea;padding-bottom:.35rem}
+    h3{margin-top:2rem} h4{margin-bottom:.2rem}
+    .eyebrow{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
+    .lead{font-size:1.17rem;max-width:66ch}
+    .card,.note,.warning,.danger{padding:1rem 1.3rem;margin:1.25rem 0;border-radius:.65rem;border:1px solid #d8e0ea;background:white}
+    .note{border-left:5px solid #3182ce}.warning{border-left:5px solid #e9a424;background:#fff9eb}
+    .danger{border-left:5px solid #d34c49;background:#fff4f3}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:1rem}
+    .grid .card{margin:0}
+    .table-wrap{overflow-x:auto;margin:1.25rem 0;border-radius:.55rem;border:1px solid #d8e0ea}
+    table{border-collapse:collapse;background:white;width:100%;min-width:42rem}
+    th,td{text-align:left;vertical-align:top;padding:.6rem .8rem;border-bottom:1px solid #e5ebf2}
+    th{background:#eaf1fa}tr:last-child td{border:0}
+    code,pre{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+    :not(pre)>code{background:#eaf0f7;padding:.12rem .3rem;border-radius:.25rem}
+    pre{background:#102338;color:#e6f2ff;overflow:auto;padding:1rem 1.2rem;border-radius:.6rem;line-height:1.45}
+    pre code{white-space:pre} .badge{display:inline-block;padding:.12rem .5rem;border-radius:99px;font-size:.78rem;font-weight:700;background:#dce9fa;color:#153c69}
+    .badge.experimental{background:#ffedbe;color:#654307}.badge.limited{background:#ffdad7;color:#7b2220}
+    .diagram{white-space:pre-wrap;font-family:ui-monospace,monospace;background:#eff4fa;padding:1.3rem;border-radius:.65rem;overflow-x:auto}
+    details{border:1px solid #d8e0ea;border-radius:.55rem;padding:.7rem 1rem;background:white;margin:.8rem 0}
+    summary{cursor:pointer;font-weight:700} .small{font-size:.89rem;color:#52667c}
+    kbd{border:1px solid #b9c7d5;border-radius:.3rem;padding:.1rem .35rem}
+    :focus-visible{outline:3px solid #ec9c28;outline-offset:2px}
+    @media(max-width:840px){.layout{display:block}aside{position:static;max-height:none;border:0;border-bottom:1px solid #d8e0ea}main{padding:1rem}}
+    @media(prefers-color-scheme:dark){
+      :root{color:#e6effa;background:#101924}a{color:#9ed2ff}
+      aside{border-color:#304559}aside a:hover,aside a:focus{background:#20384c}
+      h2{border-color:#304559}.card,.note,details,table{background:#192838;border-color:#304559}
+      .warning{background:#352b1b}.danger{background:#392523}th{background:#243b51}
+      td,th{border-color:#304559}:not(pre)>code,.diagram{background:#243b51;color:#edf5ff}
+      .small{color:#b4c8d9}
+    }
+    @media print{.layout{display:block}aside{display:none}main{padding:0}header{color:#111;background:white;border:2px solid #111}a{color:#000}pre,table,details{break-inside:avoid}details>summary{display:none}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside aria-label="Contents">
+    <strong>CPG + faults · field wiki</strong>
+    <a href="#orientation">Start here</a>
+    <a href="#map">Repository map</a>
+    <a href="#concepts">Concepts &amp; data model</a>
+    <a href="#setup">Install &amp; environment</a>
+    <a href="#quickstart">First runnable workflow</a>
+    <a href="#input">Grid input</a>
+    <a href="#topology">Mesh, geometry &amp; graphs</a>
+    <a href="#surfaces">3D surface primitives</a>
+    <a href="#fractures">2.5D fracture projection</a>
+    <a href="#fault3d">3D fault projection</a>
+    <a href="#deform">Deform the grid</a>
+    <a href="#parameters">Deformation controls</a>
+    <a href="#recommended">Best-supported settings</a>
+    <a href="#deformation-lab">Tested deformation cases</a>
+    <a href="#faults-io">FAULTS input &amp; output</a>
+    <a href="#checks">Checks &amp; validation</a>
+    <a href="#recipes">Task recipes</a>
+    <a href="#status">Maturity &amp; limitations</a>
+    <a href="#evidence">Measured evidence</a>
+    <a href="#api">API index</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#sources">Sources &amp; provenance</a>
+  </aside>
+  <main>
+    <header id="orientation">
+      <div class="eyebrow">Offline, source-linked field guide · 12 October 2026</div>
+      <h1>Corner-point grids, fault projection, and deformation</h1>
+      <p class="lead">A practical wiki for <strong>cpg2python</strong> (the importable
+        <code>cpg2unstructured</code> package) and <strong>fault-projections</strong>
+        (the importable <code>fault_projections</code> package). Learn which library
+        owns each operation, run small examples, then decide what can safely move
+        into a reservoir workflow.</p>
+      <p><a href="#quickstart">Start with the examples ↓</a> ·
+        <a href="#status">Read the safety limits ↓</a> ·
+        <a href="#sources">Inspect original sources ↓</a></p>
+    </header>
+    <div class="warning"><strong>Versioned snapshot, not a promise of production readiness.</strong>
+      Both inspected checkouts are on clean local <code>main</code> branches with
+      latest commits dated 29 July 2026. The examples below distinguish documented
+      tests/benchmarks from anything executed for this guide. An <code>ok</code> result
+      alone does not certify a simulator-ready <code>FAULTS</code> deck.</div>
+
+    <section id="map">
+      <h2>1 · What lives where?</h2>
+      <div class="diagram">Eclipse text GRDECL or binary EGRID
+         │
+         ▼
+  cpg2python/  →  import cpg2unstructured
+  readers → CornerPointGrid → mesh / graph / geometry
+                          └→ pillar targets → morph_pillars → COORD INCLUDE
+         │                                  ▲
+         ▼                                  │ targets
+  fault-projections/ → import fault_projections
+  2D traces / 3D polygons / quad fault meshes
+    → fault faces / VTK / Eclipse FAULTS
+    → adapt_grid or adapt_deck ─────────────┘</div>
+      <div class="table-wrap"><table><thead><tr><th>Checkout</th><th>Owns</th><th>Where</th></tr></thead><tbody>
+        <tr><td><a href="../../cpg2python/README.md">cpg2python</a><br><span class="badge">Git repo</span></td>
+          <td>Import name <code>cpg2unstructured</code>; grid readers, topology, geometry,
+              graph, mesh-surface primitives, deformation solver, validity, COORD writer.</td>
+          <td><code>/mnt/c/projects/library-development/cpg2python/</code>
+            · <a href="https://github.com/arturcastiel/cpg2python">remote</a></td></tr>
+        <tr><td><a href="../../fault-projections/README.md">fault-projections</a><br><span class="badge">Git repo</span></td>
+          <td>Import name <code>fault_projections</code>; turns fault shapes into
+              mesh-aligned surfaces/FAULTS and targets for <code>morph_pillars</code>.
+              <code>adapt_grid</code> is the fault-driven deformation orchestrator.</td>
+          <td><code>/mnt/c/projects/library-development/fault-projections/</code>
+            · <a href="https://github.com/arturcastiel/fault-projections">remote</a></td></tr>
+        <tr><td><a href="../../viz-cpg2unstructured/README.md">viz-cpg2unstructured</a></td>
+          <td>Standalone interactive notebooks and Matplotlib comparison plots; not bundled in the wheel.</td>
+          <td><code>library-development/viz-cpg2unstructured/</code></td></tr>
+        <tr><td><a href="../../fault-projections-benchmarks/">fault-projections-benchmarks</a></td>
+          <td>Separate experimental surface-projection scripts and outputs, not a package API.</td>
+          <td><code>library-development/fault-projections-benchmarks/</code></td></tr>
+        <tr><td><a href="../../fault-project-theory/README.md">fault-project-theory</a></td>
+          <td>Mathematical paper on shortest-path and discrete-chain surface projection.</td>
+          <td><code>library-development/fault-project-theory/</code></td></tr>
+      </tbody></table></div>
+      <p><strong>Not the same library:</strong>
+        <code>/mnt/c/projects/faults/fault-projection/</code> is an independent,
+        proprietary implementation. Do not mix its <code>fault_projection</code>
+        APIs or licensing assumptions with these GPL libraries.</p>
+    </section>
+
+    <section id="concepts">
+      <h2>2 · A mental model before the code</h2>
+      <div class="grid">
+        <div class="card"><h3>Corner-point grid (CPG)</h3><p>A logical
+          <code>NX × NY × NZ</code> collection of cells. <code>COORD</code>
+          describes pillar endpoints; <code>ZCORN</code> describes cell-corner depths;
+          <code>ACTNUM</code> switches cells on/off. A column can pinch out or sit across a fault.</p></div>
+        <div class="card"><h3>Unstructured mesh</h3><p>Explicit XYZ nodes, cell corners,
+          faces and neighbors, including split faces at non-matching fault depths,
+          plus non-neighbor connections (NNCs) across collapsed layers.
+          Logical <code>(i,j,k)</code> positions remain recoverable.</p></div>
+        <div class="card"><h3>Fault as cell faces</h3><p>Eclipse <code>FAULTS</code>
+          identifies faces by 1-based cell indices and direction; it is not a
+          general 3D mesh file. Projecting a smooth geological fault onto a fixed
+          mesh makes a staircase.</p></div>
+        <div class="card"><h3>Fault-driven morph</h3><p>Choose which pillars a trace
+          claims, move their XY coordinates toward that trace, spread distortion
+          through neighboring pillars, reject invalid cells, and optionally polish
+          cell shape. The pillar lattice and <code>ZCORN</code> remain unchanged.</p></div>
+      </div>
+      <p><strong>Coordinates and indexing:</strong> APIs generally use NumPy
+        zero-based arrays internally; emitted Eclipse <code>FAULTS</code> records
+        are one-based. Eclipse Z usually increases downward. Fault grid geometry
+        and deformation are <em>not</em> fracture growth, flow simulation,
+        transmissibility calculation or a geomechanical stress solve.</p>
+    </section>
+
+    <section id="setup">
+      <h2>3 · Install the two libraries together</h2>
+      <p>Both repositories are siblings. Use one isolated environment and editable
+        installs so imports come from these exact checkouts:</p>
+      <pre><code>cd /mnt/c/projects/library-development/cpg2python
+python3 -m venv .venv
+.venv/bin/python -m pip install -e ".[fast,dev]"
+.venv/bin/python -m pip install -e "../fault-projections[viz,shapefile,test]"
+.venv/bin/python -c "import cpg2unstructured, fault_projections; print('imports OK')"</code></pre>
+      <p>Use <code>fast</code> for SciPy CSR shortest paths, <code>viz</code> for
+        Matplotlib and <code>shapefile</code> for <code>pyshp</code>. Check the
+        current <a href="../../cpg2python/pyproject.toml">grid manifest</a> and
+        <a href="../../fault-projections/pyproject.toml">projection manifest</a>
+        before pinning dependencies. Python 3.10+ is the documented baseline.
+        A GitHub clone can substitute for the sibling checkouts, but install
+        <code>cpg2python</code> first.</p>
+      <div class="note"><strong>Paths in this page are local to this machine.</strong>
+        Open this HTML from its directory so relative links to sibling repo docs
+        work. On another machine, place it beside the two checkouts and change
+        the absolute path in the installation commands.</div>
+    </section>
+
+    <section id="quickstart">
+      <h2>4 · One small end-to-end example</h2>
+      <p>This route uses the bundled 5 × 5 × 3-cell text grid (XY extent
+        0–5; 36 pillars). The interior trace below is a worked input, not
+        a recorded golden result. Read the <a href="#checks">checks</a>
+        before exporting anything for simulation.</p>
+      <pre><code>import numpy as np
+from pathlib import Path
+from cpg2unstructured import read_grdecl, from_grdecl, build_topology, write_grid_include
+from fault_projections.adapt import adapt_grid
+
+root = Path("/mnt/c/projects/library-development/cpg2python")
+grid = read_grdecl(root / "examples/quickstart.grdecl")
+mesh = build_topology(from_grdecl(grid))
+print("logical dimensions:", mesh.cart_dims, "active cells:", mesh.n_cells)
+
+# This trace is inside the bundled grid; substitute your authored fault.
+trace = np.array([[1.0, 1.0], [3.0, 3.0]], dtype=float)
+result = adapt_grid(
+    grid, trace, w0=0.05, boundary="pinned",
+    smoothness="elastic", polish="barrier",
+    regenerate_faults=False, on_invalid="raise",
+)
+assert result.ok, result.morph.validity.summary()
+corridor = result.corridor(trace)
+assert corridor.ok, corridor.summary()
+print(result.summary())
+write_grid_include(result.grid, "adapted-coord.grdecl")</code></pre>
+      <div class="warning"><strong>Worked input, not a benchmark:</strong>
+        substitute your own authored fault in the same coordinate frame;
+        do not treat a passing assertion as simulator qualification.
+        <code>regenerate_faults=False</code> is deliberate:
+        the current topology reconstruction fails on some real decks.
+        The output is an INCLUDE with updated <code>COORD</code>, not a
+        stand-alone complete simulator deck.</div>
+    </section>
+
+    <section id="input">
+      <h2>5 · Loading a grid</h2>
+      <h3>Text: GRDECL</h3>
+      <pre><code>from cpg2unstructured import read_grdecl, from_grdecl
+grid = read_grdecl("reservoir.grdecl")
+cube = from_grdecl(grid, pinch_tol=0.0)</code></pre>
+      <p>The parser accepts Eclipse geometry and active-cell keywords,
+        nested <code>INCLUDE</code>s, and selected cell properties.
+        <code>from_grdecl</code> assembles the corner cube and handles inactive
+        and pinched cells. Feed the returned cube
+        into <code>build_topology</code>.</p>
+      <h3>Binary: EGRID or FEGRID</h3>
+      <pre><code>import numpy as np
+from cpg2unstructured import read_egrid, from_grdecl, build_topology
+grid = read_egrid("FIELD.EGRID")  # MAPAXES applied by default
+cube = from_grdecl(grid)
+mesh = build_topology(cube)
+raw_local = read_egrid("FIELD.EGRID", apply_mapaxes=False)  # warns if MAPAXES exists
+wide = read_egrid("FIELD.EGRID", dtype=np.float64)</code></pre>
+      <p>The reader uses <code>resfo</code>, returns <code>float32</code> by default,
+        and returns a <code>CornerPointGrid</code> suitable for both adaptation
+        and <code>from_grdecl</code> → <code>build_topology</code>.
+        Despite its name, <code>from_grdecl</code> accepts either reader:
+        <code>Grdecl</code> is a type alias for <code>CornerPointGrid</code>,
+        not a separate text-only type. See
+        <a href="../../cpg2python/docs/grid-input.md">grid input</a> and
+        <a href="../../cpg2python/examples/read_egrid_demo.py">EGRID demo</a>.</p>
+      <div class="danger"><strong>Coordinate frame:</strong>
+        <code>read_egrid</code> applies MAPAXES by default; the include writer
+        refuses an already MAPAXES-applied grid unless you explicitly set
+        <code>allow_mapaxes_applied=True</code>. Do not write those world
+        coordinates back into a deck expecting its original local frame
+        without checking the simulator's MAPAXES interpretation.</div>
+    </section>
+
+    <section id="topology">
+      <h2>6 · Explicit topology, geometry, and navigation</h2>
+      <pre><code>from cpg2unstructured import (
+    read_grdecl, from_grdecl, build_topology, attach_props,
+    cell_adjacency, shortest_path,
+)
+
+g = read_grdecl("cpg2python/examples/quickstart.grdecl")
+mesh = attach_props(build_topology(from_grdecl(g)), g)
+print(mesh.nodes.shape, mesh.faces.neighbours.shape, mesh.n_cells)
+print(mesh.original_ijk[:3], mesh.nnc.shape, mesh.component.shape)
+if "PORO" in mesh:
+    print(mesh["PORO"].mean())
+
+graph = cell_adjacency(mesh, weights="unit")
+distance, path = shortest_path(graph, 0, mesh.n_cells - 1)
+print(distance, path)
+parts = mesh.split()  # connected subgrids; useful when ACTNUM creates islands</code></pre>
+      <p><code>mesh.cell_faces</code> maps each active cell to six directional
+        face slots; <code>mesh.index_map</code> converts active IDs to logical
+        indices.         <code>mesh.nnc</code> can store non-neighbor links across pinch-outs.
+        Faulted i/j neighbors with non-matching Z can produce additional faces;
+        see <a href="#status">limitations</a> before using this on large
+        field decks. <code>shortest_path_fast</code> and
+        <code>cell_adjacency_csgraph</code> use the optional SciPy backend.</p>
+    </section>
+
+    <section id="surfaces">
+      <h2>7 · The 3D surface building blocks</h2>
+      <p>The low-level grid library also exposes a 3D node-edge graph,
+        face-edge incidence, oriented boundaries, plane geometry and
+        prescribed-boundary filling. These are the primitives beneath
+        <code>fault_projections.project_fault_surface</code> and
+        <code>project_quad_mesh_surface</code>; most users should start with
+        those higher-level calls rather than assemble a surface manually.</p>
+      <div class="diagram">Grid nodes + edges → snap candidate polygon / mesh skeleton
+                         ↓
+             one discrete edge path per input edge
+                         ↓
+     face set whose boundary equals the projected loop
+                         ↓
+              X/Y/Z FAULTS faces + VTK</div>
+      <p>For adjoining 3D fault quads, project the <em>shared edge once</em>.
+        Filling each quad independently can leave a seam; a shared skeleton
+        plus prescribed-boundary fill makes inner edges cancel under mod-2
+        union. A surface's boundary loop is computed from its actual face set,
+        not guessed from the continuous polygon.</p>
+    </section>
+
+    <section id="fractures">
+      <h2>8 · A 2.5D fracture line → Eclipse FAULTS</h2>
+      <p>“2.5D” means a 2D XY polyline is projected to mesh faces and then
+        extruded through all <code>NZ</code> layers. It does <em>not</em>
+        infer a depth-varying fault. The sample uses the bundled 0–5 XY
+        grid; on that grid it writes four face records through three layers.</p>
+      <pre><code>import numpy as np
+from cpg2unstructured import read_grdecl, from_grdecl, build_topology, projected_topology
+from fault_projections import (
+    build_projected_graph, project_polylines, stitch_paths,
+    path_to_faults, faults_text,
+)
+
+grid = build_topology(from_grdecl(read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)))
+top = projected_topology(grid, "xy")
+graph = build_projected_graph(top)
+lines = [np.array([[1., 1.], [3., 3.]])]
+nodes = project_polylines(lines, graph)  # snap / intersect segments
+paths = stitch_paths(nodes, graph)       # shortest paths along mesh edges
+faces = [path_to_faults(path, top) for path in paths]
+text = faults_text(faces, nz=grid.cart_dims[2])
+print(text)  # inspect before adding to a simulation deck</code></pre>
+      <p>Alternatively ingest ESRI shapefile polylines with
+        <code>read_shapefile(...)</code> and <code>as_polylines(...)</code>
+        (optional <code>pyshp</code>). This projection leaves the grid
+        unchanged, so the faces can still be stair-stepped relative to the
+        geological trace. For a straightened grid, use
+        <a href="#deform">adaptation</a> and validate the resulting face chain.</p>
+    </section>
+
+    <section id="fault3d">
+      <h2>9 · Fault surfaces in 3D</h2>
+      <h3>One planar polygon</h3>
+      <pre><code>import numpy as np
+from cpg2unstructured import read_grdecl, from_grdecl, build_topology
+from fault_projections import project_fault_surface, write_faults_3d, vtk
+
+grid = build_topology(from_grdecl(read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)))
+polygon = np.array([[2,0,0], [2,5,0], [2,5,3], [2,0,3]], dtype=float)
+surface = project_fault_surface(polygon, grid)  # explicit UnstructuredGrid
+write_faults_3d("FAULTS.txt", [("F1", surface)], grid)
+vtk.write_fault_vtk("inspection", grid, surface, polygon=polygon)</code></pre>
+      <p>Input is a <strong>planar</strong> closed polygon. The surface is
+        selected from 3D cell faces, preserving layer-specific K and X/Y/Z
+        directions; its reported boundary is the discrete surface's own rim.
+        The example selects 14 faces on the bundled grid and writes
+        <code>FAULTS.txt</code> plus files under <code>inspection/</code>.
+        Inspect the VTK output before interpreting the <code>FAULTS</code>
+        records physically.</p>
+      <h3>Curved or piecewise-planar fault</h3>
+      <p><code>facet_surface</code> can split a curved height function or
+        point cloud into planar quads. <code>project_faceted_surface</code>
+        unions the projected facets, but independently projected adjacent
+        quads can disagree along a shared edge. For a coherent quad
+        <em>surface mesh</em>, use <code>QuadMesh</code>,
+        <code>project_mesh_skeleton</code> and
+        <code>project_quad_mesh_surface</code>: shared edges are projected
+        once and the per-patch boundaries are filled consistently.
+        Branching faults (more than two patches along an edge) are rejected
+        rather than treated as a manifold surface.</p>
+      <p><strong>Run a complete two-quad fixture:</strong> the repository
+        example constructs six vertices and two quads sharing an edge,
+        projects them onto a synthetic grid and writes FAULTS + VTK:</p>
+      <pre><code>cd /mnt/c/projects/library-development/fault-projections
+python3 examples/quad_mesh_fault.py --out quad-demo
+# Optional: --polish; inspect the printed "interior holes" count.</code></pre>
+      <p>That command produced 208 faces and zero interior holes with its
+        default fixture in the local check; a naïve two-facet projection
+        would not enforce a shared seam. Import <code>QuadMesh</code> and
+        <code>project_quad_mesh_surface(mesh, explicit_grid, graph)</code>
+        to embed the same sequence in code. The bundled quickstart grid
+        contains inactive cells and is <em>not</em> a drop-in substitute:
+        a sample ridge on it raised <code>BoundaryDoesNotBound</code>.
+        Build and validate a suitable Cartesian/field fixture first.</p>
+      <p>See the <a href="../../fault-projections/docs/algorithm.md">algorithm guide</a>,
+        <a href="../../fault-projections/docs/boundary-rule.md">boundary rule</a>,
+        and the <a href="../../fault-projections/examples/">example directory</a>
+        for actual input construction and figure exports.</p>
+    </section>
+
+    <section id="deform">
+      <h2>10 · Fault-driven deformation, carefully</h2>
+      <p>The grid package does not understand geological faults. The
+        <em>projection</em> package turns traces/polygons into
+        <code>PillarTargets</code>; the <em>grid</em> package moves pillars.
+        Moving <code>COORD</code> leaves the corner-point lattice and
+        <code>ZCORN</code> intact, and distorts surrounding cell shape.
+        It does not remesh or add resolution.</p>
+      <div class="diagram">2D XY trace → targets_from_polylines → identical XY shifts at both pillar ends
+3D planar polygon / quad facets → depth-varying targets → top and bottom move independently
+                               ↓
+                       morph_pillars → MorphResult.grid
+                       adapt_grid    → AdaptResult.grid
+                               ↓
+         cell validity + corridor + face chain + physical outline</div>
+      <h3>High-level: a trace into an adapted grid</h3>
+      <pre><code>import numpy as np
+from cpg2unstructured import read_grdecl, write_grid_include
+from fault_projections.adapt import adapt_grid
+
+original = read_grdecl("model.grdecl")
+trace = np.array([[120., 80.], [340., 510.]])
+adapted = adapt_grid(
+    original, trace,
+    w0=0.05, boundary="slide", boundary_scope="active",
+    smoothness="elastic", poisson=0.3,
+    polish="barrier", polish_fidelity=4.0,
+    validity_scope="active", on_invalid="raise",
+    regenerate_faults=False,
+)
+assert adapted.ok, adapted.morph.validity.summary()
+corridor = adapted.corridor(trace)  # checks adapted.grid, not original
+assert corridor.ok, corridor.summary()
+print(adapted.summary())
+write_grid_include(adapted.grid, "adapted-grid.grdecl")</code></pre>
+      <div class="danger"><strong>Choose <code>boundary="pinned"</code>
+        for sheared or non-axis-aligned outlines.</strong> The documented
+        <code>slide</code> implementation uses lattice-index tangents instead
+        of geometric boundary tangents; it can move the actual outline while
+        reporting success. Default <code>slide</code> is appropriate only
+        after checking the outline and its post-morph displacement.
+        <code>free</code> deliberately changes model extent.</div>
+      <h3>Low-level: explicit targets and solver</h3>
+      <pre><code>from cpg2unstructured import morph_pillars, write_grid_include
+from fault_projections import targets_from_polyline
+
+targets = targets_from_polyline(original, trace, consolidate=True)
+out = morph_pillars(
+    original, targets, w0=0.05, boundary="pinned",
+    smoothness="elastic", polish="barrier",
+    validity_scope="active", on_invalid="raise",
+)
+assert out.ok, out.validity.summary()
+print(out.summary())
+write_grid_include(out.grid, "adapted-grid.grdecl")</code></pre>
+      <p>Use <code>targets_from_polylines</code> to solve several faults
+        together rather than repeatedly morphing an already-morphed grid.
+        <code>targets_from_polygon</code> handles a dipping plane;
+        <code>targets_from_facets</code> targets a faceted surface.
+        Those depth-varying 3D target workflows need extra scrutiny on
+        tilted pillars: top and bottom validity can diverge. In the low-level
+        example <code>out</code> is a <code>MorphResult</code>; high-level
+        <code>adapt_grid</code> instead returns an <code>AdaptResult</code>
+        with its solver result under <code>.morph</code>.</p>
+      <h3>Stage 2: a dipping plane changes top and bottom differently</h3>
+      <pre><code>import numpy as np
+from cpg2unstructured import read_grdecl, pillar_lattice
+from fault_projections import adapt_grid
+
+original = read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)
+polygon = np.array([
+    [2.2, 0., 0.], [2.2, 5., 0.],
+    [2.8, 5., 3.], [2.8, 0., 3.],
+])
+adapted = adapt_grid(
+    original, polygon, boundary="pinned", w0=0.05,
+    regenerate_faults=False, on_invalid="raise",
+)
+assert adapted.ok, adapted.morph.validity.summary()
+before, after = pillar_lattice(original), pillar_lattice(adapted.grid)
+d_top = after.top - before.top
+d_bot = after.bot - before.bot
+print("largest differential XY shift:", np.max(np.abs(d_top - d_bot)))
+assert np.max(np.abs(d_top - d_bot)) &gt; 0
+assert adapted.faults_after is None  # 3D shape does not write 2D FAULTS</code></pre>
+      <p>This example produces a nonzero differential top/bottom shift on
+        the bundled grid. <code>targets_from_polygon</code> in
+        <code>fault_projections.targets</code> exposes the independently
+        computed target sets if you need to inspect them. Deforming the
+        grid and projecting a 3D <code>FAULTS</code> surface are distinct
+        steps: this call does not produce the latter.</p>
+      <h3>Write separate INCLUDE files without rewriting a master deck</h3>
+      <pre><code>from fault_projections import adapt_deck
+import numpy as np
+
+trace = np.array([[1., 1.], [3., 3.]])
+result = adapt_deck(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl",
+    trace, "adapted-output",
+    prefix="fault_adapted", regenerate_faults=False,
+    boundary="pinned", on_invalid="raise",
+)
+assert result.ok, result.morph.validity.summary()
+print(result.grid_path)    # adapted-output/fault_adapted_grid.grdecl
+print(result.faults_path)  # None when regeneration is disabled</code></pre>
+      <p>With <code>regenerate_faults=True</code>, successful 2D adaptation
+        writes a second <code>*_faults.grdecl</code>. The original deck is
+        not rewritten; add the generated INCLUDE references to a reviewed
+        copy. For 3D polygon/facet inputs, <code>adapt_grid</code> does not
+        regenerate 2D FAULTS regardless of that option. See the
+        <a href="../../fault-projections/examples/adapt_dipping.py">dipping</a>,
+        <a href="../../fault-projections/examples/adapt_local.py">local</a> and
+        <a href="../../fault-projections/examples/adapt_corridor.py">corridor</a>
+        examples for full fixture construction.</p>
+      <h3>What the optimizer does</h3>
+      <ol>
+        <li><strong>Claim:</strong> select an ordered, connected lattice-pillar
+          chain close to the trace, including endpoints. Never move both
+          ends of every crossed edge onto the line: that can weld cells.</li>
+        <li><strong>Target:</strong> assign claimed pillars the nearest
+          points on the finite fault segments; consolidate contradictory
+          claims. A point already on the fault must stay constrained.</li>
+        <li><strong>Solve:</strong> minimize target misfit plus weighted
+          Laplacian or linear-elastic smoothness over pillar XY moves.
+          Unclaimed pillars share the deformation.</li>
+        <li><strong>Reject/repair:</strong> check folds, near-welds and
+          top/bottom crossings; adjust the smoothness weight if needed.
+          Always inspect <code>.ok</code> and the validity report.</li>
+        <li><strong>Polish (opt-in):</strong> use a barrier energy relative
+          to each cell's original shape to rescue flattened but uninverted
+          cells. Inspect both planes and the remaining fault misfit.</li>
+      </ol>
+      <p>The objective is <code>mean(target misfit²) + w × mean(deformation energy)</code>.
+        <strong>Smaller <code>w0</code> follows the fault more closely;
+        larger values protect cell shape.</strong> The solver can increase
+        the effective <code>w</code> to find a valid grid; the final value
+        and attempt history live in <code>MorphResult</code>.</p>
+    </section>
+
+    <section id="parameters">
+      <h2>11 · Deformation controls and trade-offs</h2>
+      <div class="table-wrap"><table><thead><tr><th>Option</th><th>What it changes</th><th>Safe interpretation</th></tr></thead><tbody>
+        <tr><td><code>boundary="pinned"</code></td><td>Fix all rim pillars.</td><td>Most conservative; recommended on sheared outlines and for interior faults when rim motion is unnecessary.</td></tr>
+        <tr><td><code>boundary="slide"</code></td><td>Move rim pillars tangentially.</td><td>Preserves axis-aligned outline in measured cases; known bug on non-axis-aligned outlines.</td></tr>
+        <tr><td><code>boundary="free"</code></td><td>Allow footprint to move.</td><td>Only if changing model extent is explicitly intended. Benchmark “winner” relies on this freedom.</td></tr>
+        <tr><td><code>boundary_scope="active"</code> / <code>"lattice"</code></td><td>Constrain active-reservoir rim vs bounding rectangle.</td><td>On irregular ACTNUM fields these rims can be entirely different.</td></tr>
+        <tr><td><code>smoothness="elastic"</code> / <code>"laplacian"</code></td><td>Linear-elastic strain vs displacement-gradient smoothing.</td><td>Choose elastic for TPFA non-orthogonality; do not trust older claims that Laplacian is “blind to shear.”</td></tr>
+        <tr><td><code>w0</code></td><td>Initial smoothness/fidelity ratio.</td><td>Smaller is closer; bisection may raise it to preserve validity.</td></tr>
+        <tr><td><code>poisson</code></td><td>Area response of elastic operator.</td><td>Only meaningful with elastic; 0.3 is common.</td></tr>
+        <tr><td><code>normal_only=True</code></td><td>Allow tangential movement along the fault.</td><td>Less over-constrained than fixing both XY components at each target.</td></tr>
+        <tr><td><code>support_rings</code></td><td>Constrain deformation near fault.</td><td><code>None</code> spreads deformation; a small integer confines deck changes but can worsen quality.</td></tr>
+        <tr><td><code>stiffness_iterations</code></td><td>Re-solve with distorted cells stiffened.</td><td>Quality feedback, not a substitute for an explicit barrier.</td></tr>
+        <tr><td><code>polish="barrier"</code></td><td>Second-stage shape barrier.</td><td>Opt-in; frequently reduces near-degenerate cells, sometimes increases residual; field-scale bottom-plane failures documented.</td></tr>
+        <tr><td><code>polish_fidelity</code>, <code>polish_ortho</code></td><td>Trade fault distance for cell shape / orthogonality.</td><td>Large fidelity can reintroduce bad cells; orthogonality costs fault fit.</td></tr>
+        <tr><td><code>min_fraction</code>, <code>validity_scope</code></td><td>Minimum pillar separation; active-only vs full-lattice gate.</td><td>On field grids, rejecting inactive-cell artifacts can destroy fidelity; still inspect original invalid cells.</td></tr>
+        <tr><td><code>on_invalid="raise"</code></td><td>Response to exhausted validity repair.</td><td>Prefer fail-loudly for production pipelines; <code>"warn"</code> is the library default, <code>"ignore"</code> suppresses it.</td></tr>
+      </tbody></table></div>
+      <p>Consult <a href="../../cpg2python/docs/mesh-morphing.md">mesh morphing</a>,
+        <a href="../../cpg2python/docs/barrier-polish.md">barrier polish</a>
+        and the <a href="../../fault-projections/docs/engineers-guide/parts/F-parameters.md">full parameter guide</a>
+        for exact defaults and the less frequently used knobs. The complete
+        <code>morph_pillars</code> signature also exposes
+        <code>stiffness</code>, <code>stiffness_power</code>,
+        <code>band_rings</code>, <code>band_softness</code>,
+        <code>write_tol</code>, <code>max_bisect</code>, <code>w_max</code>,
+        <code>polish_size</code>, <code>polish_shape_size</code>,
+        <code>polish_iterations</code> and <code>on_invalid</code>.
+        These are solver-tuning knobs, not guarantees of valid output:
+        change one at a time and rerun the four gates.</p>
+      <h3 id="recommended">What should I choose? A conditional recommendation</h3>
+      <div class="note"><strong>Best-supported default, not a universal winner:</strong>
+        on an axis-aligned grid, begin with <code>smoothness="elastic"</code>,
+        <code>w0=0.05</code>, <code>polish="barrier"</code>,
+        <code>boundary_scope="active"</code>,
+        <code>validity_scope="active"</code> and
+        <code>on_invalid="raise"</code>. Use
+        <code>boundary="pinned"</code> for an interior fault; use
+        <code>"slide"</code> only when a fault touches an axis-aligned
+        rim and tangential movement is acceptable. For a sheared or rotated
+        outline, choose <code>"pinned"</code> even for a rim-touching fault.
+        For large real decks with the documented topology blocker, specify
+        <code>regenerate_faults=False</code> and do not claim generated FAULTS.
+        Run all four gates; the 0.3 scaled-Jacobian floor is <em>not</em> a
+        built-in default.</div>
+      <p>Copyable starting point for the bundled <em>interior</em> trace
+        (change the trace, units and gates for your own deck):</p>
+      <pre><code>import numpy as np
+from cpg2unstructured import (
+    read_grdecl, pillar_lattice, cell_quality, check_validity, active_columns,
+)
+from fault_projections import adapt_grid
+
+grid = read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)
+trace = np.array([[1., 1.], [3., 3.]])
+result = adapt_grid(
+    grid, trace, boundary="pinned", boundary_scope="active",
+    validity_scope="active", smoothness="elastic", w0=0.05,
+    polish="barrier", on_invalid="raise", regenerate_faults=False,
+)
+assert result.ok, result.morph.validity.summary()
+corridor = result.corridor(trace)
+assert corridor.ok, corridor.summary()
+original = pillar_lattice(grid)
+adapted = pillar_lattice(result.grid)
+quality = check_validity(
+    adapted, original, active=active_columns(grid),
+    min_scaled_jacobian=0.3,
+)
+assert quality.ok, quality.summary()
+print("top:", cell_quality(adapted, plane="top").line())
+print("bottom:", cell_quality(adapted, plane="bot").line())
+print(result.summary())</code></pre>
+      <p>The quality threshold is a <em>user-imposed gate</em>, not a solver
+        option on <code>adapt_grid</code>. This snippet does not regenerate
+        FAULTS or certify the physical outline; follow the
+        <a href="#checks">complete four-gate example</a> and inspect the
+        master deck before downstream use.</p>
+      <div class="table-wrap"><table><thead><tr><th>Situation / priority</th><th>Starting setting</th><th>Measured reason / price</th></tr></thead><tbody>
+        <tr><td>Interior fault, preserve extent</td><td><code>pinned + elastic + barrier</code>, <code>w0=0.05</code></td><td>In the corrected 12×12 boundary study, polished interior mean residual was 8.39 m pinned versus 8.36 m slide; pinning avoids unnecessary rim motion.</td></tr>
+        <tr><td>Fault touches an axis-aligned rim</td><td><code>slide + elastic + barrier</code></td><td>Fixed-outline recommendation: 8.36 m mean interior, 16.97 m touching; zero new sub-0.3 cells in the 51 configuration runs. Axis-aligned outline displacement ~2.8e-14 m. Only five non-degenerate touching traces informed that class.</td></tr>
+        <tr><td>Sheared or rotated physical outline</td><td><code>pinned + elastic + barrier</code></td><td><code>slide</code> has an index-tangent bug: up to 47.4 m off the sheared outline in the boundary study despite <code>ok=True</code>. Pinning preserves it; accept less rim-contact fidelity.</td></tr>
+        <tr><td>Fidelity priority, quality gate still required</td><td>Add <code>polish_fidelity=20.0</code> to the barrier baseline, then check quality.</td><td>Interior slide mean residual improved from 8.36 to 4.51 m, but minimum SJ fell to 0.208; 10 of 51 runs gained sub-0.3 cells. <strong>Not</strong> a safe default.</td></tr>
+        <tr><td>TPFA / non-orthogonality priority</td><td>Add <code>polish_ortho=2.0</code>.</td><td>Interior slide mean residual increased to 11.72 m, while non-orthogonality p95 delta improved from 15.8° to 10.5°. Check your simulator's discretization assumptions.</td></tr>
+        <tr><td>Only small nearby changes allowed</td><td>Try <code>support_rings=1</code> or <code>3</code>, then recheck.</td><td>Earlier broad sweep reduced lattice movement with one ring, but the corrected boundary study did <em>not</em> test this control. Not elected as best.</td></tr>
+        <tr><td>Moving the footprint is explicitly intended</td><td><code>boundary="free"</code> only after a model-extent decision.</td><td>Interior polished fidelity: 8.30 m versus slide 8.36 m, but free moved the outline 15.5 m per rim pillar on average (up to 99.6 m). On rim-touching traces its apparent advantage vanishes when only non-rim claims are scored.</td></tr>
+      </tbody></table></div>
+      <p><strong>Why the old leaderboard winner is not the default:</strong>
+        <a href="file:///home/arturcastiel/projects/results-faults/report.md">the first
+        910-run composite ranking</a> put <code>lap_free_polish</code> first
+        (score 0.853), but it did not penalize changes to model extent
+        sufficiently. The later
+        <a href="file:///home/arturcastiel/projects/results-faults/boundary-study/RECOMMENDATION.md">paired
+        boundary study and corrected recommendation</a> establishes that
+        <code>free</code> buys apparent fault fit largely by moving the
+        footprint and that, after polish, elastic and Laplacian fit almost
+        identically; elastic fares better on quality and non-orthogonality.
+        The recommended setting is therefore conditional on the boundary
+        and the output's quality requirements, not the single highest
+        historical score. Evidence is mainly synthetic; even a good
+        synthetic setting is experimental for 3D/tilted, irregular ACTNUM,
+        faulted or full-field grids.</p>
+    </section>
+
+    <section id="deformation-lab">
+      <h2>12 · Tested deformation cases: compare before trusting</h2>
+      <p>Each block below is self-contained and uses the bundled
+        <code>cpg2python/examples/quickstart.grdecl</code> (5 × 5 × 3 cells,
+        XY 0–5), not a field model. Run with the same Python environment as
+        the <a href="#setup">installation</a>; nothing is written to either
+        repository. Numerical assertions target <em>behavior</em>, not exact
+        optimizer output across SciPy versions. These are reproducible
+        demonstrations, <strong>not</strong> a broader validation campaign.</p>
+
+      <h3>One input, four solver choices: fidelity versus cell shape</h3>
+      <pre><code>import numpy as np
+from cpg2unstructured import (
+    read_grdecl, pillar_lattice, cell_quality, check_validity, active_columns,
+)
+from fault_projections import adapt_grid
+
+grid = read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)
+trace = np.array([[1., 1.], [3., 3.]])
+settings = {
+    "elastic": dict(w0=0.05, smoothness="elastic"),
+    "laplacian": dict(w0=0.05, smoothness="laplacian"),
+    "stiffer": dict(w0=2., smoothness="elastic"),
+    "barrier": dict(w0=0.05, smoothness="elastic", polish="barrier"),
+}
+for name, kw in settings.items():
+    result = adapt_grid(
+        grid, trace, boundary="pinned", regenerate_faults=False,
+        on_invalid="raise", **kw,
+    )
+    top = cell_quality(pillar_lattice(result.grid), plane="top")
+    bottom = cell_quality(pillar_lattice(result.grid), plane="bot")
+    strict = check_validity(
+        pillar_lattice(result.grid), pillar_lattice(grid),
+        active=active_columns(grid), min_scaled_jacobian=0.3,
+    )
+    assert result.ok, result.morph.validity.summary()
+    print(name, "residual mean", round(float(result.distance_after.mean()), 4),
+          "top/bot SJ", round(top.sj_min, 3), round(bottom.sj_min, 3),
+          "newly below 0.3", strict.n_degenerate,
+          "passes 0.3 gate?", strict.ok)</code></pre>
+      <p>On the inspected checkout, elastic at <code>w0=0.05</code>
+        had mean residual ~0.0063 but minimum top scaled Jacobian ~0.058;
+        the explicit 0.3 gate rejected three columns despite
+        <code>result.ok=True</code>. Barrier polish increased mean residual
+        to ~0.062 while lifting the top minimum to ~0.627; a stiffer solve
+        also improved shape at the cost of distance. These numbers are for
+        this synthetic deck only. Compare <em>both</em> endpoint planes,
+        physical fault distance and the explicit quality floor before
+        choosing a setting; <code>check_validity</code> does not silently
+        impose a 0.3 threshold.</p>
+
+      <h3>Boundary policy: expose the sheared-outline <code>slide</code> defect</h3>
+      <pre><code>from dataclasses import replace
+import numpy as np
+from cpg2unstructured import read_grdecl, pillar_lattice
+from fault_projections import adapt_grid
+
+base = read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)
+# Shear BOTH pillar endpoints: x_world = x_local + 0.5 * y.
+coord = base.coord.copy()
+coord[:, 0] += 0.5 * coord[:, 1]
+coord[:, 3] += 0.5 * coord[:, 4]
+grid = replace(base, coord=coord)
+trace = np.array([[1.1, 2.2], [6.7, 3.4]])  # transformed rim-to-rim trace
+
+for mode in ("pinned", "slide", "free"):
+    result = adapt_grid(
+        grid, trace, w0=0.05, boundary=mode,
+        regenerate_faults=False, on_invalid="raise",
+    )
+    xy = pillar_lattice(result.grid).top
+    # Original physical outline: x-0.5y=0 or 5, and y=0 or 5.
+    outline_error = max(
+        np.max(np.abs(xy[0, :, 0] - 0.5 * xy[0, :, 1])) / np.sqrt(1.25),
+        np.max(np.abs(xy[-1, :, 0] - 0.5 * xy[-1, :, 1] - 5)) / np.sqrt(1.25),
+        np.max(np.abs(xy[:, 0, 1])),
+        np.max(np.abs(xy[:, -1, 1] - 5)),
+    )
+    print(mode, "ok", result.ok, "outline error", round(outline_error, 4),
+          "mean target residual", round(float(result.distance_after.mean()), 4))
+    if mode == "pinned":
+        assert outline_error &lt; 1e-9</code></pre>
+      <p>Observed physical outline errors were 0 for
+        <code>pinned</code>, ~0.158 for <code>slide</code>, and ~0.497
+        for <code>free</code>; all three returned <code>ok=True</code>.
+        The <code>slide</code> value is the problematic one: tangential
+        motion on an <em>index</em> edge is not tangential to this sheared
+        physical edge. For a different deck, compute distances to
+        <em>its own</em> original outline rather than copying these
+        x/y equations. A lower target residual cannot justify unnoticed
+        changes to the reservoir footprint.</p>
+
+      <h3>Two crossing traces: solve simultaneous claims, not sequential grids</h3>
+      <pre><code>import numpy as np
+from cpg2unstructured import read_grdecl
+from fault_projections import adapt_grid, targets_from_polylines
+
+grid = read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)
+traces = [
+    np.array([[1., 1.], [3., 3.]]),
+    np.array([[1., 3.], [3., 1.]]),
+]
+targets = targets_from_polylines(grid, traces)
+claimed = len(set(map(tuple, targets.ij)))
+print("target rows", targets.n, "distinct pillars", claimed)
+assert targets.n &gt; claimed  # an intersection can carry multiple claims
+result = adapt_grid(
+    grid, traces, boundary="pinned", w0=0.05,
+    regenerate_faults=False, on_invalid="raise",
+)
+assert result.ok, result.morph.validity.summary()
+assert result.distance_after.shape == (targets.n,)
+print(result.summary())</code></pre>
+      <p>This case produced ten target rows across eight distinct pillars
+        and a valid adapted grid. Each conflicting claim contributes a
+        residual; the solver balances them in one system. Calling
+        <code>adapt_grid</code> twice on successive output grids instead
+        changes the starting geometry and can undo the first alignment.
+        Do not interpret <code>result.ok</code> as proof that <em>both</em>
+        geological faults have an acceptable corridor: assess each trace,
+        its residuals, face chain and outline separately.</p>
+    </section>
+
+    <section id="faults-io">
+      <h2>13 · Reading, writing and preserving FAULTS</h2>
+      <p>The high-level projection pipeline can generate Eclipse
+        <code>FAULTS</code>/<code>FAULTDIM</code> text, optionally write 3D
+        records, and export VTK for inspection. The inverse utilities
+        <code>faults_from_deck</code> and <code>trace_faults</code> recover
+        plan-view traces from existing Eclipse face records. <em>A recovered
+        trace is not independent ground truth:</em> it runs through its
+        deck's original faces, so “before vs after” distances measured against
+        it can be circular.</p>
+      <pre><code>from fault_projections import faults_from_deck, trace_faults
+from fault_projections.adapt import fault_faces_from_chain, fault_cell_map
+
+named = faults_from_deck("field.DATA")
+for name, faces in named.items():
+    traced = trace_faults(original, faces)
+    print(name, traced.n_components)
+
+# For targets built from an authored trace:
+faces = fault_faces_from_chain(targets)
+cells = fault_cell_map(targets, original.cart_dims)
+assert cells.is_continuous</code></pre>
+      <p><code>fault_faces_from_chain</code> reads aligned faces from the
+        claimed pillar walk; it does not need to rerun nearest-node projection
+        on the deformed mesh. <code>fault_cell_map</code> identifies cells on
+        either side of the chain, with <code>(-1, -1)</code> for the outside.
+        Its <code>.is_continuous</code> tests adjacent target pillars,
+        not complete face coverage or geometric validity.
+        <code>MULTFLT</code> transmissibility multipliers are <strong>not
+        written</strong> by these APIs.</p>
+      <p><code>faults_from_deck</code> expands inclusive I/J ranges and
+        deduplicates faces by name; it ignores vertical Z/K faces by default
+        and rejects them with <code>keep_vertical=True</code>.
+        <code>trace_faults</code> retains component, branch, duplicate and
+        out-of-range metadata. <code>fault_polyline</code> returns just the
+        longest chain; choose <code>fault_polylines</code> to retain them all.
+        Neither approach silently fixes a broken fault network.</p>
+      <div class="danger"><strong>Export strategy:</strong> never replace the
+        master deck with a GRDECL read–write round trip. Unparsed scheduling,
+        region and EDIT keywords may be lost. Export a new <code>COORD</code>
+        INCLUDE and add its <code>INCLUDE 'adapted-grid.grdecl' /</code>
+        reference to a copy of the master deck. Confirm the include order
+        and simulator parsing. The default <code>regenerate_faults=True</code>
+        on <code>adapt_grid</code>/<code>adapt_deck</code> can hit current
+        real-deck topology blockers; choose explicitly.</div>
+    </section>
+
+    <section id="checks">
+      <h2>14 · Four independent gates before using an adapted grid</h2>
+      <pre><code>import numpy as np
+from cpg2unstructured import (
+    read_grdecl, boundary_mask, pillar_lattice, morph_pillars,
+)
+from fault_projections import targets_from_polyline
+from fault_projections.corridor import cell_corridor
+from fault_projections.adapt import fault_cell_map
+
+original = read_grdecl(
+    "/mnt/c/projects/library-development/cpg2python/examples/quickstart.grdecl"
+)
+trace = np.array([[1., 1.], [3., 3.]])
+targets = targets_from_polyline(original, trace)
+result = morph_pillars(
+    original, targets, boundary="pinned", w0=0.05,
+    on_invalid="raise",
+)
+assert result.ok, result.validity.summary()  # 1. valid cells
+corridor = cell_corridor(result.grid, trace)  # 2. connected, containing strip
+assert corridor.ok, corridor.summary()
+assert fault_cell_map(targets, original.cart_dims).is_continuous  # 3. chain
+
+# If extent must not move, check the original active rim in physical XY.
+rim = boundary_mask(original, scope="active")
+before = pillar_lattice(original).top[rim]
+after = pillar_lattice(result.grid).top[rim]
+tolerance_metres = 1e-6  # replace with your project's explicit tolerance
+assert np.max(np.linalg.norm(after - before, axis=-1)) &lt; tolerance_metres  # 4. fixed rim</code></pre>
+      <p>This low-level example retains <em>the exact targets used by the
+        solver</em> so the chain gate checks the same claim. High-level
+        <code>adapt_grid</code> does not expose targets on
+        <code>AdaptResult</code>; reconstructing them separately may not
+        capture all multi-trace input choices. Adjust
+        <code>tolerance_metres</code> to your project's units and rim policy.
+        These gates ask different questions: valid cells; a face-connected
+        corridor actually containing the trace; a continuous exported fault
+        chain; and whether the footprint moved. No single <code>ok</code>
+        covers all four.</p>
+      <p>To compare before and after rather than only the final grid,
+        call <code>cell_corridor(original, trace)</code> from
+        <code>fault_projections.corridor</code> before adaptation and
+        <code>adapted.corridor(trace)</code> afterward. Both use the pillar
+        lattice directly; they do not need <code>build_topology</code>.
+        <code>fault_faces_from_chain(targets)</code> takes only the targets.
+        Check both <code>FaultCellMap.left</code> and <code>.right</code>
+        for out-of-grid sentinels on boundary-touching faults.</p>
+      <p>Also inspect <code>cell_quality</code> / scaled Jacobian,
+        non-orthogonality (especially for two-point flux), the count of
+        newly sub-0.3 cells, pinched regions, the exported FAULTS records,
+        and field-specific output in a viewer. Do not mistake a validity
+        check for a quality threshold: cells can be nearly flat without being
+        inverted. <code>check_validity(..., min_scaled_jacobian=0.3)</code>
+        adds an explicit quality floor but is off by default.</p>
+    </section>
+
+    <section id="recipes">
+      <h2>15 · Choose your route</h2>
+      <div class="grid">
+        <div class="card"><h3>Just read a reservoir grid</h3><p>
+          <code>read_grdecl</code> or <code>read_egrid</code> →
+          <code>from_grdecl</code> → <code>build_topology</code>.
+          Explore active cells, connectivity, geometry and graphs.
+          <a href="#topology">Example</a>.</p></div>
+        <div class="card"><h3>2D fracture into a FAULTS deck</h3><p>
+          <code>project_polylines</code> → <code>stitch_paths</code> →
+          <code>path_to_faults</code> → <code>faults_text</code>.
+          Grid does not move. <a href="#fractures">Example</a>.</p></div>
+        <div class="card"><h3>Dipping planar 3D fault</h3><p>
+          <code>project_fault_surface</code> →
+          <code>write_faults_3d</code>/<code>vtk.write_fault_vtk</code>.
+          Face selection is discrete, not a fluid-flow solver.
+          <a href="#fault3d">Example</a>.</p></div>
+        <div class="card"><h3>Fault surface made of quads</h3><p>
+          <code>QuadMesh</code> → shared-skeleton projection →
+          <code>project_quad_mesh_surface</code>. Use this instead of
+          independent facets when seams must agree.
+          <a href="#fault3d">Explanation</a>.</p></div>
+        <div class="card"><h3>Make the grid fit a trace</h3><p>
+          <code>targets_from_polyline</code> →
+          <code>morph_pillars</code> or <code>adapt_grid</code> →
+          validity, corridor, chain and outline checks → COORD INCLUDE.
+          <a href="#deform">Example</a>.</p></div>
+        <div class="card"><h3>Analyze existing FAULTS</h3><p>
+          <code>faults_from_deck</code> → <code>trace_faults</code>.
+          Useful for topology and visual inspection, but unsuitable as
+          independent truth for fault-fidelity benchmarking.
+          <a href="#faults-io">Example</a>.</p></div>
+      </div>
+    </section>
+
+    <section id="status">
+      <h2>16 · Feature maturity and known limits</h2>
+      <p><span class="badge">Shipped</span> means present on inspected
+        <code>main</code> and accompanied by tests or documented examples;
+        it does <em>not</em> mean validated for arbitrary production decks.
+        <span class="badge experimental">Experimental</span> means optional,
+        exploratory or tested chiefly on synthetic cases.
+        <span class="badge limited">Blocked/limited</span> means a known
+        counterexample or explicit non-goal.</p>
+      <div class="table-wrap"><table><thead><tr><th>Capability</th><th>State</th><th>Boundary of confidence</th></tr></thead><tbody>
+        <tr><td>GRDECL/EGRID → corner grid; geometry and cell properties</td><td><span class="badge">Shipped</span></td><td>EGRID root grid only; MAPAXES must be respected.</td></tr>
+        <tr><td>Active-cell index mapping, NNCs, graph/shortest path</td><td><span class="badge">Shipped</span></td><td>i/j nonmatching-Z path exists; k faults unsupported.</td></tr>
+        <tr><td>Mesh edges, geometry, plan-view projection, minimal surfaces and prescribed-boundary fill</td><td><span class="badge">Shipped / scoped</span></td><td>Test-backed primitives; full topology is required and may fail on real faulted decks.</td></tr>
+        <tr><td>2.5D fracture → FAULTS; planar 3D → X/Y/Z faces</td><td><span class="badge">Shipped</span></td><td>Projection is discrete; user must examine fault geometry.</td></tr>
+        <tr><td>Quad mesh → prescribed-boundary watertight surface</td><td><span class="badge">Shipped / scoped</span></td><td>Manifold input; branching &gt;2 patches per edge rejected; real pinch-out coverage incomplete.</td></tr>
+        <tr><td>Existing FAULTS parsing, traces, cell corridors and VTK/Matplotlib inspection</td><td><span class="badge">Shipped / scoped</span></td><td>Trace extraction reports branches; corridor is a 2D lattice check, not full simulator validation. Visualization requires its extra.</td></tr>
+        <tr><td>Fault-driven XY pillar morphing and COORD INCLUDE</td><td><span class="badge experimental">Experimental for real decks</span></td><td>Benchmarked on synthetic grids and Norne probes; field-specific geometry needs independent validation.</td></tr>
+        <tr><td>Depth-varying targets from polygons/facets</td><td><span class="badge experimental">Synthetic-stage evidence</span></td><td>Independent top/bottom motion tested on synthetic examples; 3D adaptation does not regenerate FAULTS.</td></tr>
+        <tr><td>Barrier shape polish</td><td><span class="badge experimental">Opt-in</span></td><td>Can sacrifice fidelity; tilted field pillars expose bottom-plane rejection.</td></tr>
+        <tr><td><code>slide</code> on sheared outline</td><td><span class="badge limited">Known defect</span></td><td>Axis-based rim tangents can move the boundary despite <code>ok=True</code>; use <code>pinned</code>.</td></tr>
+        <tr><td>Regenerating FAULTS via full topology on Norne</td><td><span class="badge limited">Blocked</span></td><td>3-neighbor face collision; 5-/6-corner faces and mixed-active stacks remain unresolved.</td></tr>
+        <tr><td>Actual fracture propagation / mechanics / flow / MULTFLT</td><td><span class="badge limited">Out of scope</span></td><td>These libraries prepare grid geometry and face records; no physical fracture simulator is provided.</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="evidence">
+      <h2>17 · What has actually been measured?</h2>
+      <div class="table-wrap"><table><thead><tr><th>Evidence</th><th>Finding</th><th>What it does not establish</th></tr></thead><tbody>
+        <tr><td><a href="file:///home/arturcastiel/projects/results-faults/report.md">Synthetic benchmark</a></td>
+          <td>Recorded CSV: <strong>910 rows, 35 cases, 26 configurations, zero recorded errors or invalid grids</strong>.
+            Includes Cartesian, graded, sheared and tilted test geometries.</td>
+          <td>No certification of full-field FAULTS reconstruction or simulator accuracy. “Valid”
+            does not enforce a useful scaled-Jacobian floor.</td></tr>
+        <tr><td><a href="file:///home/arturcastiel/projects/results-faults/ground-truth/ground-truth.json">Authored-fault ground truth</a></td>
+          <td>Independent authored traces avoid the circularity of using a deck’s own
+            FAULTS records as truth; reported mean improvement is 13.2× versus a stair-step.</td>
+          <td>Not a guarantee that every real fault or boundary behaves similarly.</td></tr>
+        <tr><td><a href="file:///home/arturcastiel/projects/results-faults/boundary-study/RECOMMENDATION.md">Boundary study</a></td>
+          <td><code>free</code> mostly buys apparent fidelity by moving the outline;
+            fixed-rim elastic + barrier is the practical default, <code>pinned</code>
+            is safer on sheared outlines.</td>
+          <td>Only five non-degenerate rim-touching traces in the core study;
+            no universal rim-contact cutoff.</td></tr>
+        <tr><td><a href="file:///home/arturcastiel/projects/results-faults/norne/study-cost.md">Norne field probes</a></td>
+          <td>5,311 pillars; real-scale solver runs and corner cases observed;
+            the barrier polish may be rejected because the bottom plane folds.</td>
+          <td>Successful full-field fault-regeneration pipeline: topology currently
+            raises on this deck.</td></tr>
+      </tbody></table></div>
+      <div class="warning"><strong>Documentation contradictions to resolve in favor
+        of later measurements:</strong> old descriptions call Laplacian nearly
+        blind to shear; later analysis corrected that. A report calls
+        <code>lap_free_polish</code> the scoring winner; the later boundary
+        study shows that “free” changes the model footprint and is not the
+        sensible fixed-extent default. Earlier saved AXON phase notes predate
+        the July commits. Verify against code and current experiment artifacts.</div>
+    </section>
+
+    <section id="api">
+      <h2>18 · API directory</h2>
+      <p>Symbols below cover the package-root exports grouped by task
+        (types, functions, constants and errors). The call sequences above
+        and the linked test/example files are the usage references; inspect
+        exact optional argument signatures in source before automation.
+        Internal helpers in submodules are labeled separately.</p>
+      <h3><code>cpg2unstructured</code></h3>
+      <div class="table-wrap"><table><thead><tr><th>Task and call pattern</th><th>Package-root symbols</th><th>Evidence</th></tr></thead><tbody>
+        <tr><td>Read → pivot → write</td><td><code>Grdecl</code>, <code>CornerPointGrid</code>, <code>read_grdecl</code>, <code>read_egrid</code>, <code>from_grdecl</code>, <code>CornerCube</code>, <code>format_keyword</code>, <code>write_grid_include</code>, <code>MapaxesNotInvertedError</code></td><td><a href="../../cpg2python/examples/quickstart.py">Quickstart</a>, <a href="../../cpg2python/examples/read_egrid_demo.py">EGRID</a>, <a href="../../cpg2python/tests/test_grdecl_writer.py">writer tests</a></td></tr>
+        <tr><td>Find faces → build mesh → attach properties</td><td><code>pillar_of_node</code>, <code>Faces</code>, <code>find_i_faces</code>, <code>find_j_faces</code>, <code>find_ij_faces</code>, <code>find_k_faces</code>, <code>build_topology</code>, <code>UnstructuredGrid</code>, <code>attach_props</code>, <code>IndexMap</code></td><td><a href="../../cpg2python/docs/TUTORIAL.md">Tutorial</a>, <a href="../../cpg2python/tests/test_find_i_faces_dispatch.py">fault-face tests</a></td></tr>
+        <tr><td>Compute measures: <code>face_geometry</code>(nodes, faces, corners), then <code>cell_geometry</code>(nodes, faces, cell_faces, face_geometry)</td><td><code>FaceGeometry</code>, <code>CellGeometry</code>, <code>face_geometry</code>, <code>cell_geometry</code></td><td><a href="../../cpg2python/tests/test_geometry.py">Geometry tests</a></td></tr>
+        <tr><td>Mesh → weighted adjacency → path (SciPy for sparse variants)</td><td><code>cell_adjacency</code>, <code>shortest_path</code>, <code>csgraph_indices</code>, <code>cell_adjacency_csgraph</code>, <code>shortest_path_fast</code></td><td><a href="../../cpg2python/tests/test_graph.py">Graph tests</a></td></tr>
+        <tr><td>Face-derived edges, centroids, areas and node-edge path</td><td><code>Mesh3DGraph</code>, <code>build_mesh_graph_3d</code>, <code>mesh_edges</code>, <code>face_edges</code>, <code>oriented_face_edges</code>, <code>face_areas</code>, <code>face_centroids</code>, <code>cell_centroids</code></td><td><a href="../../cpg2python/tests/test_mesh3d.py">3D mesh tests</a></td></tr>
+        <tr><td>Project built mesh to a plane</td><td><code>ProjectedTopology</code>, <code>projected_topology</code>, <code>PLANE_AXES</code></td><td><a href="../../cpg2python/tests/test_planview.py">Plan-view tests</a></td></tr>
+        <tr><td>Plane + polygon → surface → boundary</td><td><code>MinimalSurface</code>, <code>fit_plane</code>, <code>project_to_plane</code>, <code>point_in_polygon</code>, <code>planar_minimal_surface</code>, <code>boundary_edges</code>, <code>boundary_chain</code>, <code>surface_boundary_loops</code></td><td><a href="../../cpg2python/tests/test_minimal_surface.py">Surface tests</a></td></tr>
+        <tr><td>Solve prescribed boundary → seed face fill → shrink area</td><td><code>gf2_solve_boundary</code>, <code>fill_prescribed_boundary</code>, <code>fill_with_seed</code>, <code>reduce_area</code>, <code>BoundaryDoesNotBound</code></td><td><a href="../../cpg2python/tests/test_prescribed_fill.py">Fill tests</a></td></tr>
+        <tr><td>Get active pillars/rim/spacing → move coordinates</td><td><code>PillarLattice</code>, <code>pillar_lattice</code>, <code>active_columns</code>, <code>boundary_mask</code>, <code>local_spacing</code>, <code>apply_displacement</code></td><td><a href="../../cpg2python/docs/mesh-morphing.md">Morph guide</a></td></tr>
+        <tr><td>Build targets → solve → assess validity; <code>laplacian_matrix</code> is a lower-level SciPy smoothing operator</td><td><code>PillarTargets</code>, <code>MorphResult</code>, <code>morph_pillars</code>, <code>laplacian_matrix</code>, <code>ValidityExhausted</code>, <code>ValidityExhaustedWarning</code>, <code>ValidityReport</code>, <code>check_validity</code>, <code>column_signed_areas</code>, <code>separation_violations</code>, <code>WELD_TOLERANCE</code></td><td><a href="../../cpg2python/tests/test_validity_scope.py">Validity scope tests</a></td></tr>
+        <tr><td>Cell metrics and optional shape polish</td><td><code>cell_quality</code>, <code>QualityReport</code>, <code>scaled_jacobian</code>, <code>aspect_ratio</code>, <code>skew</code>, <code>non_orthogonality</code>, <code>DistortionTerms</code>, <code>cell_quads</code>, <code>corner_jacobians</code>, <code>distortion_energy</code>, <code>shape_targets</code>, <code>PolishReport</code>, <code>polish_lattice</code></td><td><a href="../../cpg2python/docs/barrier-polish.md">Polish</a>, <a href="../../cpg2python/tests/test_quality.py">quality tests</a></td></tr>
+        <tr><td>Parser/topology errors and package version</td><td><code>Cpg2UError</code>, <code>GrdeclError</code>, <code>GrdeclSyntaxError</code>, <code>GrdeclConsistencyError</code>, <code>GrdeclIncludeError</code>, <code>GrdeclDuplicatePropertyWarning</code>, <code>NonMatchingZError</code>, <code>__version__</code></td><td><a href="../../cpg2python/cpg2unstructured/__init__.py">Root exports</a></td></tr>
+      </tbody></table></div>
+      <div class="warning"><strong>Broken root exports in this snapshot:</strong>
+        <code>depth_crossings</code>, <code>corner_folds</code>,
+        <code>proximity_violations</code> are declared in
+        <code>__all__</code> but must be imported from
+        <code>cpg2unstructured.validity</code>;
+        <code>elastic_stiffness</code>, <code>stiffness_from_quality</code>
+        and <code>support_mask</code> must be imported from
+        <code>cpg2unstructured.morph</code>. A wildcard root import may fail;
+        this page does not pretend these are usable root-level functions.
+        These are low-level solver/validity helpers, not separate adaptation
+        pipelines.</div>
+      <h3><code>fault_projections</code></h3>
+      <div class="table-wrap"><table><thead><tr><th>Task and call pattern</th><th>Package-root symbols</th><th>Evidence</th></tr></thead><tbody>
+        <tr><td>Input lines → project onto plan-view graph → stitch</td><td><code>ProjectedGraph</code>, <code>build_projected_graph</code>, <code>as_polylines</code>, <code>read_shapefile</code>, <code>project_polyline</code>, <code>project_polylines</code>, <code>stitch_path</code>, <code>stitch_paths</code></td><td><a href="../../fault-projections/README.md">2.5D quickstart</a></td></tr>
+        <tr><td>Stitched paths → 2.5D FAULTS</td><td><code>FaultFace</code>, <code>path_to_faults</code>, <code>faults_text</code>, <code>write_faults</code></td><td><a href="../../fault-projections/tests/test_faults.py">Fault tests</a></td></tr>
+        <tr><td>Construct planar polygon → project discrete 3D surface</td><td><code>Polygon3D</code>, <code>as_polygon</code>, <code>polygon_plane</code>, <code>project_segment</code>, <code>project_polygon_boundary</code>, <code>to_plane_2d</code>, <code>FaultSurface</code>, <code>project_fault_surface</code></td><td><a href="../../fault-projections/tests/test_polygon.py">Polygon tests</a></td></tr>
+        <tr><td>Surface → layer-aware FAULTS</td><td><code>FaultFace3D</code>, <code>surface_to_fault_faces</code>, <code>faults_text_3d</code>, <code>write_faults_3d</code></td><td><a href="../../fault-projections/examples/quad_mesh_fault.py">Quad example</a></td></tr>
+        <tr><td>Facets or coherent manifold quad mesh → surface</td><td><code>planarize_quad</code>, <code>facet_surface</code>, <code>project_faceted_surface</code>, <code>QuadMesh</code>, <code>MeshSkeleton</code>, <code>project_mesh_skeleton</code>, <code>project_quad_mesh_surface</code></td><td><a href="../../fault-projections/tests/test_quad_surface.py">Quad tests</a></td></tr>
+        <tr><td>Validate quads before projection</td><td><code>validate_quad_mesh</code>, <code>MeshValidation</code>, <code>MeshValidationError</code>, <code>DegenerateQuadError</code>, <code>NonPlanarQuadError</code>, <code>NonManifoldMeshError</code>, <code>NonOrientableMeshError</code>, <code>DisconnectedMeshError</code></td><td><a href="../../fault-projections/fault_projections/validate.py">Validation source</a></td></tr>
+        <tr><td>Fault shape → claimed pillars → adapted grid/deck</td><td><code>closest_point_on_segment</code>, <code>segment_incidences</code>, <code>targets_from_polyline</code>, <code>targets_from_polylines</code>, <code>adapt_grid</code>, <code>adapt_deck</code>, <code>AdaptResult</code>, <code>fault_faces_for</code></td><td><a href="../../fault-projections/examples/adapt_corridor.py">Corridor example</a>, <a href="../../fault-projections/examples/adapt_dipping.py">Dipping example</a></td></tr>
+        <tr><td>Parse original FAULTS → face edges → trace all chains</td><td><code>FaultRecord</code>, <code>parse_faults_text</code>, <code>read_faults_records</code>, <code>faults_from_deck</code>, <code>face_edge</code>, <code>edge_face</code>, <code>FaultChain</code>, <code>FaultTrace</code>, <code>trace_faults</code>, <code>fault_polyline</code>, <code>fault_polylines</code></td><td><a href="../../fault-projections/fault_projections/from_faults.py">Reader source</a></td></tr>
+        <tr><td>Inspection modules and package version</td><td><code>viz</code>, <code>vtk</code>, <code>__version__</code></td><td><a href="../../fault-projections/examples/adapt_visual.py">Plot example</a></td></tr>
+      </tbody></table></div>
+      <p><strong>Submodule-only calls:</strong>
+        <code>targets_from_polygon</code> and <code>targets_from_facets</code>
+        from <code>fault_projections.targets</code> build independent top/bottom
+        targets for stage-2 deformation;
+        <code>fault_faces_from_chain</code> and <code>fault_cell_map</code>
+        from <code>fault_projections.adapt</code> inspect an ordered claim.
+        <code>cell_corridor</code>, <code>CellCorridor</code>,
+        <code>densify_polyline</code> and
+        <code>locate_cells</code> live only in
+        <code>fault_projections.corridor</code> (see the
+        <a href="../../fault-projections/docs/cell-corridor.md">guide</a>).
+        Plotters and VTK writers
+        are accessed as <code>viz.plot_projection(...)</code> and
+        <code>vtk.write_fault_vtk(...)</code>; they are not root functions.</p>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>19 · Troubleshooting and interpretation</h2>
+      <details><summary>My script cannot import either package.</summary>
+        <p>Check that the current interpreter is the environment where
+          both editable packages were installed. The repository
+          <code>cpg2python</code> imports as <code>cpg2unstructured</code>;
+          <code>fault-projections</code> imports as
+          <code>fault_projections</code>. A similarly named proprietary
+          <code>fault_projection</code> package is unrelated.</p></details>
+      <details><summary><code>build_topology</code> fails with “more than 2 neighbours”.</summary>
+        <p>This is a documented real-deck blocker, not evidence that
+          <code>morph_pillars</code> also fails. For a grid-only adaptation,
+          set <code>regenerate_faults=False</code> and validate the output.
+          Do not claim a regenerated FAULTS deck was produced.</p></details>
+      <details><summary><code>result.ok</code> is true but the outline moved.</summary>
+        <p>Validity checks cell geometry, not the original model footprint.
+          On non-axis-aligned outlines <code>slide</code> can move the rim
+          because it uses index-space tangents. Use <code>pinned</code>
+          and explicitly compare physical boundary coordinates.</p></details>
+      <details><summary>A result is valid but has very flat cells.</summary>
+        <p>Non-inverted does not imply good quality. Measure scaled Jacobian
+          and non-orthogonality, consider <code>polish="barrier"</code> and
+          an explicit <code>min_scaled_jacobian</code> threshold, and re-check
+          the distance to the actual authored fault.</p></details>
+      <details><summary>The fault “improved” by moving the model footprint.</summary>
+        <p><code>boundary="free"</code> deliberately moves it. Score only
+          non-rim claimed pillars to distinguish genuine alignment from
+          footprint movement; choose <code>slide</code> for an axis-aligned
+          footprint or <code>pinned</code> otherwise.</p></details>
+      <details><summary>The generated deck does not include transmissibility multipliers.</summary>
+        <p><code>FAULTS</code> names fault faces; <code>MULTFLT</code>
+          authoring and simulator-flow calibration remain outside this
+          implementation. Preserve relevant original deck sections and
+          review their consistency separately.</p></details>
+    </section>
+
+    <section id="sources">
+      <h2>20 · Original code, docs and testing provenance</h2>
+      <ul>
+        <li>Public APIs: <a href="../../cpg2python/cpg2unstructured/__init__.py">grid exports</a>,
+          <a href="../../fault-projections/fault_projections/__init__.py">projection exports</a>;
+          <a href="../../fault-projections/fault_projections/adapt.py">adaptation implementation</a>.</li>
+        <li>Guides: <a href="../../cpg2python/docs/TUTORIAL.md">grid tutorial</a>,
+          <a href="../../cpg2python/docs/grid-input.md">grid input</a>,
+          <a href="../../cpg2python/docs/mesh-morphing.md">morphing</a>,
+          <a href="../../cpg2python/docs/barrier-polish.md">polish</a>,
+          <a href="../../fault-projections/docs/engineers-guide/parts/A-orientation.md">engineer's guide</a>,
+          <a href="../../fault-projections/docs/engineers-guide/parts/I-evidence.md">evidence</a>.</li>
+        <li>Test source: <a href="../../cpg2python/tests/">grid tests</a>,
+          <a href="../../fault-projections/tests/">projection tests</a>,
+          <a href="../../fault-projections/benchmarks/">benchmark scripts</a>.
+          For this page, focused grid morph/validity/writer tests ran
+          (<strong>73 passed</strong>) and focused fault adaptation/corridor/target
+          tests ran (<strong>78 passed</strong>); the bundled-grid adaptation
+          and topology/graph, 2.5D, planar 3D, deck-INCLUDE and coherent
+          quad-mesh and four-gate examples also executed successfully.
+          The additional solver-choice, sheared-rim, crossing-traces and
+          recommended-configuration blocks above were executed separately
+          and their stated synthetic measurements checked. These
+          checks do not constitute a full library suite or field-deck
+          qualification. Historical benchmark counts above remain
+          <em>recorded evidence</em>, not a fresh benchmark run.</li>
+        <li>Historical AXON project logs are in
+          <code>library-development/axon/my-axon/dev-projects/fault-projections/</code>
+          and <code>/mnt/c/projects/axon1/my-axon/dev-projects/cpg-to-unstructure/</code>.
+          Their snapshot metadata predates later commits; prefer current
+          checkout code and measured results for present capabilities.</li>
+      </ul>
+      <p class="small">This is an independently authored navigation and teaching
+        document, not a substitute for the libraries’ licenses, their current
+        signatures or deck-specific engineering validation. No network service
+        or external assets are needed to read this HTML offline.</p>
+    </section>
+  </main>
+</div>
+</body>
+</html>

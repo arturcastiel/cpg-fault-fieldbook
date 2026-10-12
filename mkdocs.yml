@@ -1,0 +1,36 @@
+site_name: CPG + Fault Fieldbook
+site_description: Executable guide to corner-point grids and fault projections
+docs_dir: docs
+site_dir: site
+use_directory_urls: false
+hooks:
+  - fieldbook/docs_hook.py
+nav:
+  - Start: index.md
+  - Installation:
+      - Windows: start/install-windows.md
+      - Linux and WSL: start/install-linux.md
+  - Learn:
+      - Grid and topology: learn/grids.md
+      - Fault projection: learn/faults.md
+      - Deformation: learn/deformation.md
+      - Validation and export: learn/validation.md
+  - Methods:
+      - Index: functions/index.md
+      - Grid input: functions/grid-input.md
+      - Topology and quality: functions/topology-quality.md
+      - Pillar morphing: functions/morph-pillars.md
+      - Targets and corridors: functions/targets-corridors.md
+      - Adaptation: functions/adapt-grid.md
+      - Surface projection: functions/surface-projection.md
+  - Decisions: decisions/settings.md
+  - Cases:
+      - Passing interior trace: cases/one-trace.md
+      - Valid but flat: cases/quality-trap.md
+      - Sheared outline: cases/outline-trap.md
+  - Reference:
+      - API coverage: reference/coverage.md
+      - API inventory: reference/api-inventory.md
+      - Input and data: reference/data.md
+      - Limits: reference/limits.md
+  - Original field guide: legacy-field-guide.html

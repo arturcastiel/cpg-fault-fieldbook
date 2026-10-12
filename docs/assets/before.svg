@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Top-plane grid and authored fault trace">
+<rect width="400" height="400" fill="#f9fbff"/>
+<text x="18" y="22" font-size="16" fill="#20324a">Before</text>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="32.00,368.00 32.00,300.80 32.00,233.60 32.00,166.40 32.00,99.20 32.00,32.00"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="99.20,368.00 99.20,300.80 99.20,233.60 99.20,166.40 99.20,99.20 99.20,32.00"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="166.40,368.00 166.40,300.80 166.40,233.60 166.40,166.40 166.40,99.20 166.40,32.00"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="233.60,368.00 233.60,300.80 233.60,233.60 233.60,166.40 233.60,99.20 233.60,32.00"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="300.80,368.00 300.80,300.80 300.80,233.60 300.80,166.40 300.80,99.20 300.80,32.00"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="368.00,368.00 368.00,300.80 368.00,233.60 368.00,166.40 368.00,99.20 368.00,32.00"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="32.00,368.00 99.20,368.00 166.40,368.00 233.60,368.00 300.80,368.00 368.00,368.00"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="32.00,300.80 99.20,300.80 166.40,300.80 233.60,300.80 300.80,300.80 368.00,300.80"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="32.00,233.60 99.20,233.60 166.40,233.60 233.60,233.60 300.80,233.60 368.00,233.60"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="32.00,166.40 99.20,166.40 166.40,166.40 233.60,166.40 300.80,166.40 368.00,166.40"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="32.00,99.20 99.20,99.20 166.40,99.20 233.60,99.20 300.80,99.20 368.00,99.20"/>
+<polyline fill="none" stroke="#52708e" stroke-width="1.4" points="32.00,32.00 99.20,32.00 166.40,32.00 233.60,32.00 300.80,32.00 368.00,32.00"/>
+<polyline fill="none" stroke="#c12736" stroke-width="3" points="99.20,300.80 233.60,166.40"/>
+</svg>
