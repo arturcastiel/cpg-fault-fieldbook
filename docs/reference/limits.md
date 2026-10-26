@@ -22,6 +22,10 @@
     cell face, re-processing raises `NonMatchingZError`.
   - On tilted fault pillars, cells bounded by a moved pillar change
     volume, while their thickness is preserved.
+  - A dipping fault that ends on the grid rim cannot be adapted with a
+    stage-2 polygon under `boundary="pinned"`, because the rim pillars
+    stay vertical. Lesson 21 leans the fault pillars first, then
+    adapts with a 2D trace (stage 1 keeps the lean).
   - Inactive cells and slides across K faces are not covered.
 - **Steep traces with `adapt_grid`:** on lesson 21's 8×6 grid, a
   trace from the south rim to the north rim at about 30° or more off

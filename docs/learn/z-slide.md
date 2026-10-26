@@ -94,41 +94,56 @@ the fault, applied to every corner east of the line.
 
 {{ example:20_z_slide_partial_fault.py }}
 
-## A fault oblique to the grid
+## An oblique, dipping fault
 
 Run `python -m fieldbook.cli run 21_z_slide_oblique_fault`. Add
 `--out DIR` to keep the four decks.
 
-The fault trace runs from (300, 0) to (600, 600), 27° off the J axis,
-so no single pillar line carries it. `fault_faces_for` turns it into a
-**staircase** of 6 X faces and 3 Y faces. The flood fill and the
-throw check therefore treat both directions:
+At the top (z = 0), the fault trace runs from (300, 0) to (600, 600),
+27° off the J axis, so no single pillar line carries it.
+`fault_faces_for` turns it into a **staircase** of 6 X faces and 3 Y
+faces. The flood fill and the throw check therefore treat both
+directions:
 
 - an X face at pillar line `i` compares slots `2i-1 | 2i` along I;
 - a Y face at pillar row `j` compares slots `2j-1 | 2j` along J.
 
+The staircase pillars keep their tops on the trace and lean 40 m east
+at 80 m depth. Every fault pillar leans by the same vector, so the
+fault dips 65.9° to the south-east. Each FAULTS face is a planar
+parallelogram, with area `|edge × lean|` per metre of depth.
+
 The lesson runs the same slide on two decks with identical FAULTS:
 
 - **A, regular grid:** the staircase follows the grid lines, so the
-  fault is 900 m long in plan.
-- **B, adapted grid:** `adapt_grid(..., boundary="pinned")` moves the
-  fault pillars onto the trace. The FAULTS faces are unchanged
-  (`faces_invariant`), and the fault is 710.6 m long, against 670.8 m
-  for the trace itself.
+  fault is 900 m long in plan and 970.8 m² per metre of depth.
+- **B, adapted grid:** `adapt_grid(..., boundary="pinned")` takes a
+  2D trace (stage 1). It moves pillars rigidly, so the fault pillars
+  land on the trace and keep their lean. The FAULTS faces are
+  unchanged (`faces_invariant`). The fault is 711.3 m long in plan and
+  775.1 m² per metre of depth.
 
-![Oblique fault, regular and adapted grids](../assets/z-slide/oblique-fault.png)
+A stage-2 dipping polygon is not used here because `boundary="pinned"`
+keeps the rim pillars vertical, and this fault ends on the rim.
+
+![Oblique dipping fault, regular and adapted grids](../assets/z-slide/oblique-fault.png)
 
 **What to expect:**
 
-- **The slide:** in both decks the south-east block of 21 columns
-  slides 7 m. COORD and FAULTS are unchanged.
+- **The slide:** in both decks the south-east hanging wall of 21
+  columns slides 7 m. COORD and FAULTS are unchanged.
+- **Slip along the fault:** a corner on a fault pillar slides 7.83 m
+  along it (Δx +3.5 m, Δz +7 m), so it stays on the fault surface.
+  The slip follows the pillar lean, which is not exactly the dip
+  direction.
 - **Faces that open:** exactly the 9 FAULTS faces lose shared
   corners, X and Y alike.
 - **Contacts:** the same five layer pairs touch in both decks. Each
-  area is the fault's plan length times the depth overlap, so A
-  carries 27 % more contact area than B. For example, fixed k1 |
-  moving k0 is 6,300 m² in A and 4,974 m² in B.
-- **Volumes:** the pillars are vertical, so no cell changes volume.
+  area is the fault area per metre of depth times the depth overlap,
+  so A carries 25 % more contact area than B. For example, fixed k1 |
+  moving k0 is 6,796 m² in A and 5,426 m² in B.
+- **Volumes:** only moving cells that touch a fault pillar change
+  volume (27 cells, −4.0 % to −1.6 %). The fixed block is unchanged.
 - **Steep traces:** keep `adapt_grid` traces gentle on small grids.
   At about 30° or more off the axis here, the regenerated FAULTS
   include a face on the grid rim and `faces_invariant` is False. The

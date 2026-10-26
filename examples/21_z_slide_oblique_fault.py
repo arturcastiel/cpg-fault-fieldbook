@@ -1,11 +1,13 @@
-"""Slide a fault whose trace is oblique to the grid axes.
+"""Slide a fault that is oblique to the grid axes and dips.
 
-A vertical fault trace runs from (300, 0) to (600, 600), 27 degrees off the J axis of an 8x6x3
-layer cake, so no single pillar line carries it. fault_faces_for turns the trace into a
-staircase of X and Y FAULTS faces. Two decks carry the same FAULTS: (A) the regular grid, whose
-staircase is 900 m long, and (B) the grid after adapt_grid, whose fault pillars sit on the
-trace. In both, the south-east block slides 7 m down its pillars by editing ZCORN only; the
-re-processed contact areas follow the fault length of each deck. Pass --out DIR to keep the decks.
+The fault trace at the top (z = 0) runs from (300, 0) to (600, 600), 27 degrees off the J axis
+of an 8x6x3 layer cake, so no single pillar line carries it. fault_faces_for turns the trace
+into a staircase of X and Y FAULTS faces. The pillars of that staircase keep their tops on the
+trace and lean 40 m east at 80 m depth, so the fault dips about 66 degrees to the south-east.
+Two decks carry the same FAULTS: (A) the regular grid and (B) the grid after adapt_grid, which
+moves the fault pillars rigidly onto the trace and keeps their lean. In both, the south-east
+hanging wall slides 7 m down its pillars by editing ZCORN only; the re-processed contact areas
+follow each deck's fault surface. Pass --out DIR to keep the four decks.
 """
 
 import argparse
@@ -24,14 +26,15 @@ from fault_projections.faults import faults_text
 from fault_projections.from_faults import faults_from_deck
 
 NX, NY, NZ, DX, DZ = 8, 6, 3, 100.0, 10.0
-TRACE = np.array([[300.0, 0.0], [600.0, 600.0]])
+TRACE = np.array([[300.0, 0.0], [600.0, 600.0]])   # fault trace at the top, z = 0
+LEAN = 40.0                                         # fault pillars move 40 m east by z = 80
 THROW = 7.0
 SEED, FAR = (0, NX - 1), (NY - 1, 0)       # (j, i) columns on the moving / fixed side
 
 
-def layer_cake():
-    """Flat 10 m layers on vertical pillars."""
-    coord = [(i * DX, j * DX, 0.0, i * DX, j * DX, 80.0)
+def layer_cake(leaning=()):
+    """Flat 10 m layers; pillars in `leaning` keep their top and move LEAN m east at z = 80."""
+    coord = [(i * DX, j * DX, 0.0, i * DX + (LEAN if (i, j) in leaning else 0.0), j * DX, 80.0)
              for j in range(NY + 1) for i in range(NX + 1)]
     depth = np.repeat(np.arange(NZ) * DZ, 2) + np.tile([0.0, DZ], NZ)   # 0,10,10,20,20,30
     zcorn = np.broadcast_to(depth[:, None, None], (2 * NZ, 2 * NY, 2 * NX)).ravel()
@@ -78,11 +81,20 @@ def slide(grid, faces, throw):
     return replace(grid, zcorn=z.ravel())
 
 
-def fault_length(grid, faces):
-    """Plan-view length of the FAULTS faces, from the pillar tops in COORD."""
-    top = grid.coord.reshape(NY + 1, NX + 1, 6)[:, :, :2]
-    return sum(float(np.linalg.norm(top[b[1], b[0]] - top[a[1], a[0]]))
-               for a, b in map(face_pillars, faces))
+def area_per_metre(grid, faces):
+    """Fault area per metre of depth, from COORD.
+
+    Both pillars of a FAULTS face lean the same way, so the face is a parallelogram: its area
+    between two depths is |edge x lean| times the depth difference, with lean = d(xyz)/dz.
+    """
+    coord = grid.coord.reshape(NY + 1, NX + 1, 6)
+    lean = (coord[..., 3:] - coord[..., :3]) / (coord[..., 5:] - coord[..., 2:3])
+    total = 0.0
+    for a, b in map(face_pillars, faces):
+        assert np.allclose(lean[a[1], a[0]], lean[b[1], b[0]]), "fault pillars must be parallel"
+        edge = coord[b[1], b[0], :3] - coord[a[1], a[0], :3]
+        total += float(np.linalg.norm(np.cross(edge, lean[a[1], a[0]])))
+    return total
 
 
 def unwelded_faces(grid):
@@ -105,7 +117,7 @@ def write_deck(grid, faces, path, header):
 
 
 def reprocess(path, block):
-    """Re-read the deck; return {(k fixed, k moving): area} across the fault and cell volumes."""
+    """Re-read the deck; return {(k fixed, k moving): area} across the fault, cells, volumes."""
     topology = build_topology(from_grdecl(read_grdecl(path)))
     areas = face_geometry(topology.nodes, topology.faces, topology.cell_corners)
     volumes = cell_geometry(topology.nodes, topology.faces, topology.cell_faces, areas).volumes
@@ -120,7 +132,7 @@ def reprocess(path, block):
         fixed, moving = (ca, cb) if block[cb[1], cb[0]] else (cb, ca)
         key = (int(fixed[2]), int(moving[2]))
         found[key] = found.get(key, 0.0) + float(areas.areas[face])
-    return found, volumes
+    return found, ijk, volumes
 
 
 def overlap(k_fixed, k_moving):
@@ -129,8 +141,17 @@ def overlap(k_fixed, k_moving):
     return max(0.0, min((k_fixed + 1) * DZ, (k_moving + 1) * DZ + THROW) - top)
 
 
+def dip_degrees(grid, faces):
+    """Dip of the plane through the top trace and the fault pillars' lean."""
+    coord = grid.coord.reshape(NY + 1, NX + 1, 6)
+    i, j = face_pillars(faces[0])[0]
+    lean = coord[j, i, 3:] - coord[j, i, :3]
+    normal = np.cross(np.append(TRACE[1] - TRACE[0], 0.0), lean)
+    return float(np.degrees(np.arccos(abs(normal[2]) / np.linalg.norm(normal))))
+
+
 def run(name, grid, faces, out):
-    """Write, slide and re-process one deck; return its fault length."""
+    """Write, slide and re-process one deck; return its fault area per metre of depth."""
     path0 = write_deck(grid, faces, out / f"{name}_0_input.grdecl", f"lesson 21 {name}: input")
     on_deck = faults_from_deck(path0)["OBLIQUE"]
     assert on_deck == faces, "FAULTS did not survive the round trip"
@@ -144,41 +165,55 @@ def run(name, grid, faces, out):
     assert unwelded_faces(after) == {(f.i, f.j, f.face) for f in faces}, \
         "the slide opened a face that is not in FAULTS"
 
-    length = fault_length(after, faces)
-    found, volumes = reprocess(path1, block)
-    expected = {(kf, km): length * overlap(kf, km)
+    per_metre = area_per_metre(after, faces)
+    found, ijk, volumes = reprocess(path1, block)
+    expected = {(kf, km): per_metre * overlap(kf, km)
                 for kf in range(NZ) for km in range(NZ) if overlap(kf, km) > 0}
     assert found.keys() == expected.keys(), (sorted(found), sorted(expected))
     for key, area in found.items():
         assert np.isclose(area, expected[key], rtol=1e-9), (key, area, expected[key])
-    _, volumes0 = reprocess(path0, block)
-    assert np.allclose(volumes, volumes0, rtol=1e-12), "vertical pillars keep cell volumes"
+
+    # Corners on a leaning fault pillar move east as they slide down it, so only moving cells
+    # that touch a fault pillar can change volume; the fixed block cannot change at all.
+    _, _, volumes0 = reprocess(path0, block)
+    fault_pillars = {p for f in faces for p in face_pillars(f)}
+    touches = np.array([any((i + di, j + dj) in fault_pillars for di in (0, 1) for dj in (0, 1))
+                        for i, j, _ in ijk])
+    moving = block[ijk[:, 1], ijk[:, 0]]
+    change = volumes / volumes0 - 1.0
+    changed = ~np.isclose(change, 0.0, atol=1e-12)
+    assert not changed[~moving].any(), "a fixed cell changed volume"
+    assert not changed[~touches].any(), "a cell away from the fault pillars changed volume"
 
     n_x = sum(f.face == "X" for f in faces)
     pairs = ", ".join(f"k{kf}|k{km} {a:,.0f}" for (kf, km), a in sorted(found.items()))
-    print(f"{name}: {len(faces)} faces ({n_x} X, {len(faces) - n_x} Y), fault length "
-          f"{length:6.1f} m, {block.sum()} columns slid {THROW:g} m")
+    print(f"{name}: {len(faces)} faces ({n_x} X, {len(faces) - n_x} Y), fault area "
+          f"{per_metre:6.1f} m2 per m of depth, {block.sum()} columns slid {THROW:g} m")
     print(f"  contacts fixed|moving m2: {pairs}")
-    return length
+    print(f"  {changed.sum()} moving cells next to the fault changed volume, "
+          f"{change[changed].min():+.1%} to {change[changed].max():+.1%}")
+    return per_metre
 
 
 def main(out):
     out.mkdir(parents=True, exist_ok=True)
-    regular = layer_cake()
-    staircase = fault_faces_for(regular, TRACE)
+    staircase = fault_faces_for(layer_cake(), TRACE)
+    regular = layer_cake({p for f in staircase for p in face_pillars(f)})
+    assert fault_faces_for(regular, TRACE) == staircase, "the lean should not move the tops"
     adapted = adapt_grid(regular, TRACE, boundary="pinned", w0=0.05, polish="barrier",
                          on_invalid="raise")
     assert adapted.ok and adapted.faces_invariant, adapted.summary()
     assert adapted.faults_after == staircase, "adaptation should keep the FAULTS faces"
-    top = adapted.grid.coord.reshape(-1, 6)
-    assert np.allclose(top[:, :2], top[:, 3:5]), "adapted pillars stay vertical"
-    print(f"trace length {np.linalg.norm(TRACE[1] - TRACE[0]):.1f} m; adapted fault pillars "
-          f"within {adapted.distance_after.max():.1f} m of it "
+    lean = lambda g: g.coord.reshape(-1, 6)[:, 3:5] - g.coord.reshape(-1, 6)[:, :2]  # noqa: E731
+    assert np.allclose(lean(adapted.grid), lean(regular)), "stage 1 keeps every pillar's lean"
+    print(f"trace length {np.linalg.norm(TRACE[1] - TRACE[0]):.1f} m at z = 0; fault dips "
+          f"{dip_degrees(regular, staircase):.1f} deg to the south-east")
+    print(f"adapted fault pillars within {adapted.distance_after.max():.1f} m of the trace "
           f"(regular grid: {adapted.distance_before.max():.1f} m)")
 
-    length_a = run("A_regular", regular, staircase, out)
-    length_b = run("B_adapted", adapted.grid, adapted.faults_after, out)
-    print(f"same FAULTS, same slide; the regular staircase has {length_a / length_b - 1:.0%} "
+    area_a = run("A_regular", regular, staircase, out)
+    area_b = run("B_adapted", adapted.grid, adapted.faults_after, out)
+    print(f"same FAULTS, same slide; the regular staircase has {area_a / area_b - 1:.0%} "
           "more fault area than the adapted grid")
 
 
