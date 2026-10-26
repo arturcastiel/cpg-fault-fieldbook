@@ -2,7 +2,7 @@
 
 **Same fixture and fault as [the successful case](one-trace.md)**,
 but turn off barrier polish while keeping `boundary="pinned"` and
-`w0=0.05`. Run `python -m fieldbook.cli run 08_settings`.
+`w0=0.05`. Run `python -m fieldbook.cli run 09_settings`.
 
 | Setting | Mean target residual | Top min SJ | New cells below 0.3 | Upstream `ok` |
 |---|---:|---:|---:|---|

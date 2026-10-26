@@ -9,7 +9,7 @@ trace `[[1, 1], [3, 3]]`; targets made with
 ![Adapted grid and same authored trace](../assets/after.svg)
 
 The two SVGs use **the same physical scale**. Run
-`python -m fieldbook.cli run 14_visualize --out output/figures` to
+`python -m fieldbook.cli run 15_visualize --out output/figures` to
 regenerate them; the script uses the exact target object for its
 four-gate report. The generated view is top-plane only, and visual
 agreement alone is not evidence of bottom-plane quality.
@@ -29,7 +29,7 @@ property and simulator checks.
 
 To record the input hash, upstream revisions, dependency versions,
 settings and every gate in machine-readable JSON, run:
-`python -m fieldbook.cli run 17_case_dossier --out output/dossier`.
+`python -m fieldbook.cli run 18_case_dossier --out output/dossier`.
 The artifact is explicitly labeled `simulator_validated: false`.
 
-{{ example:17_case_dossier.py }}
+{{ example:18_case_dossier.py }}

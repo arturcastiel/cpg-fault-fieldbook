@@ -45,16 +45,16 @@ inclusions and local links resolve.
 
 | Track | Runnable source | What you learn |
 |---|---|---|
-| Grid | `01_read_grid`, `01_egrid`, `02_mesh_graph` | Text/binary input, MAPAXES, pivot, topology and properties |
-| Faults | `03_project_trace`, `04_project_surface` | 2.5D FAULTS and planar 3D faces |
-| Adapt | `05_one_trace`, `06_crossing_traces`, `07_dipping_fault` | Targets, high-level and low-level solves |
-| Judge | `08_settings`, `09_sheared_rim`, `10_four_gates` | Fidelity, quality, rim displacement and corridor |
-| Export | `11_export_includes` | Separate grid INCLUDE, no master-deck rewrite |
-| Real-deck intake | `13_field_deck_intake --deck PATH` | Read-only dimensions, ACTNUM, frame and top/bottom quality |
-| Figures | `14_visualize --out PATH` | Same-scale before/after SVGs plus numerical gates |
-| Curved fault | `15_faceted_fault` | Two joined planar facets drive independent top/bottom targets |
-| Coordinate frame | `16_mapaxes_guard` | Expected writer error for transformed EGRID geometry |
-| Reproducibility | `17_case_dossier --out PATH` | JSON case report with input hash, revisions, settings and gates |
+| Grid | `01_read_grid`, `02_egrid`, `03_mesh_graph` | Text/binary input, MAPAXES, pivot, topology and properties |
+| Faults | `04_project_trace`, `05_project_surface` | 2.5D FAULTS and planar 3D faces |
+| Adapt | `06_one_trace`, `07_crossing_traces`, `08_dipping_fault` | Targets, high-level and low-level solves |
+| Judge | `09_settings`, `10_sheared_rim`, `11_four_gates` | Fidelity, quality, rim displacement and corridor |
+| Export | `12_export_includes` | Separate grid INCLUDE, no master-deck rewrite |
+| Real-deck intake | `14_field_deck_intake --deck PATH` | Read-only dimensions, ACTNUM, frame and top/bottom quality |
+| Figures | `15_visualize --out PATH` | Same-scale before/after SVGs plus numerical gates |
+| Curved fault | `16_faceted_fault` | Two joined planar facets drive independent top/bottom targets |
+| Coordinate frame | `17_mapaxes_guard` | Expected writer error for transformed EGRID geometry |
+| Reproducibility | `18_case_dossier --out PATH` | JSON case report with input hash, revisions, settings and gates |
 
 The [function reference](docs/functions/index.md) documents high-impact calls;
 the [API coverage inventory](docs/reference/coverage.md) distinguishes

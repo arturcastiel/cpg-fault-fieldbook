@@ -17,7 +17,7 @@ export drift.
 | Targets and deformation | Single, crossing, dipping, faceted adaptation | 05–09, 15 | Synthetic only |
 | Validation | Quality, validity, corridor | 05, 08–10 | Project floors explicit |
 | Export / read-only deck intake | `adapt_deck`, readers | 11, 13 | Grid INCLUDE only; no simulator check |
-| EGRID/MAPAXES | Reader reference | 01_egrid, 16_mapaxes_guard | Bundled upstream reader fixture; no simulator round trip |
+| EGRID/MAPAXES | Reader reference | 02_egrid, 17_mapaxes_guard | Bundled upstream reader fixture; no simulator round trip |
 | Shapefile and VTK plotting | Legacy description | None yet | Not verified end-to-end here |
 | Other root exports/types/errors | Legacy directory | Upstream tests only | Reference expansion pending |
 

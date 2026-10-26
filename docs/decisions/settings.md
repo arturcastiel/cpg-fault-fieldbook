@@ -25,7 +25,7 @@ settle `support_rings`, `poisson`, field grids, 3D fault surfaces or
 irregular ACTNUM. The [local source-linked snapshot](../legacy-field-guide.html)
 has additional limitations and citations.
 
-Use `08_settings` and `09_sheared_rim` to reproduce the *mechanism*
+Use `09_settings` and `10_sheared_rim` to reproduce the *mechanism*
 on a different, tiny fixture; their unitless numbers are not the
 metre-valued boundary-study numbers. Compare authored-fault distance,
 top and bottom quality, fault corridor, chain and outline before

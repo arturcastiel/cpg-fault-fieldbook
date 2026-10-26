@@ -2,7 +2,7 @@
 
 - **Sheared rim:** `boundary="slide"` uses index-space tangents,
   so physical outline motion can be nonzero despite `result.ok`.
-  Reproduce with `09_sheared_rim`; prefer `pinned`.
+  Reproduce with `10_sheared_rim`; prefer `pinned`.
 - **Field topology:** full `build_topology` currently fails on the
   documented Norne deck (face with more than two neighbours);
   `regenerate_faults=True` is unsafe to assume there. `False`

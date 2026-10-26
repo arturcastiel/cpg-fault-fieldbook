@@ -17,7 +17,7 @@ py -3 -m venv .venv
 ```
 
 Open `site\index.html` for the generated wiki. Use `--out output\demo`
-with export lessons: `run 11_export_includes --out output\demo`.
+with export lessons: `run 12_export_includes --out output\demo`.
 The toy deck uses **arbitrary consistent units**; do not silently assume
 metres or project a trace defined in a different MAPAXES frame. WSL
 users follow the [Linux directions](install-linux.md) and use

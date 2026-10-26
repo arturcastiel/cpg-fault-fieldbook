@@ -14,21 +14,21 @@ MAPAXES by default; when writing transformed coordinates, use the
 writer's explicit MAPAXES override **only** if the simulator coordinate
 frame was checked.
 
-Run `python -m fieldbook.cli run 01_egrid` to compare the bundled binary
+Run `python -m fieldbook.cli run 02_egrid` to compare the bundled binary
 MAPAXES fixture in raw-local and transformed-world frames:
 
-{{ example:01_egrid.py }}
+{{ example:02_egrid.py }}
 
 The writer refuses to silently export MAPAXES-transformed world
 coordinates into a deck expecting local coordinates. Run
-`python -m fieldbook.cli run 16_mapaxes_guard`; it asserts the
+`python -m fieldbook.cli run 17_mapaxes_guard`; it asserts the
 specific error and leaves no output file:
 
-{{ example:16_mapaxes_guard.py }}
+{{ example:17_mapaxes_guard.py }}
 
-Run `python -m fieldbook.cli run 02_mesh_graph`:
+Run `python -m fieldbook.cli run 03_mesh_graph`:
 
-{{ example:02_mesh_graph.py }}
+{{ example:03_mesh_graph.py }}
 
 The `Faces` attribute is spelled `neighbours`. Topology construction
 may fail on complex field decks, including the recorded Norne case;

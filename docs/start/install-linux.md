@@ -19,7 +19,7 @@ python3 -m venv .venv
 
 If using preinstalled dependencies, omit installs and invoke your active
 interpreter. The beginner lessons run offline with the bundled licensed
-fixture; the quad demo (`12_quad_surface`) additionally requires the
+fixture; the quad demo (`13_quad_surface`) additionally requires the
 sibling upstream source checkout. No download occurs without an explicit
 call to [`fetch`](../reference/data.md).
 

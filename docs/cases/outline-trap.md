@@ -3,7 +3,7 @@
 **Fixture:** the bundled 5 × 5 × 3 grid, with both endpoints
 sheared by `x_world = x_local + 0.5*y`; an authored rim-to-rim
 trace transformed into the same frame. Run
-`python -m fieldbook.cli run 09_sheared_rim`.
+`python -m fieldbook.cli run 10_sheared_rim`.
 
 | Boundary | `result.ok` | Max physical outline deviation |
 |---|---|---:|

@@ -45,7 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     download.add_argument("--attribution", required=True)
     download.add_argument("--out", required=True, type=Path)
     run = commands.add_parser("run")
-    run.add_argument("lesson", help="lesson stem, e.g. 05_one_trace")
+    run.add_argument("lesson", help="lesson stem, e.g. 06_one_trace")
     run.add_argument("--out", type=Path, help="explicit output directory for export lessons")
     run.add_argument("--deck", type=Path, help="user-supplied GRDECL/EGRID for intake lesson")
     args = parser.parse_args(argv)
