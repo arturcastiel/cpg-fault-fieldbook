@@ -1,13 +1,15 @@
 """Slide a fault that is oblique to the grid axes and dips.
 
 The fault trace at the top (z = 0) runs from (300, 0) to (600, 600), 27 degrees off the J axis
-of an 8x6x3 layer cake, so no single pillar line carries it. fault_faces_for turns the trace
-into a staircase of X and Y FAULTS faces. The pillars of that staircase keep their tops on the
-trace and lean 40 m east at 80 m depth, so the fault dips about 66 degrees to the south-east.
+of an 8x6x3 layer cake (40 m layers), so no single pillar line carries it. fault_faces_for turns
+the trace into a staircase of X and Y FAULTS faces. The staircase pillars, and every other
+pillar of the south-east hanging wall, keep their tops and lean 75 m east at the base (120 m),
+so the fault dips about 61 degrees to the south-east; the footwall pillars stay vertical.
 Two decks carry the same FAULTS: (A) the regular grid and (B) the grid after adapt_grid, which
-moves the fault pillars rigidly onto the trace and keeps their lean. In both, the south-east
-hanging wall slides 7 m down its pillars by editing ZCORN only; the re-processed contact areas
-follow each deck's fault surface. Pass --out DIR to keep the four decks.
+moves the fault pillars rigidly onto the trace and keeps their lean. In both, the hanging wall
+slides 25 m down its pillars by editing ZCORN only. Its pillars are parallel, so it moves as one
+rigid piece along the fault and no cell changes volume; the re-processed contact areas follow
+each deck's fault surface. Pass --out DIR to keep the four decks.
 """
 
 import argparse
@@ -25,18 +27,18 @@ from fault_projections.adapt import fault_faces_for
 from fault_projections.faults import faults_text
 from fault_projections.from_faults import faults_from_deck
 
-NX, NY, NZ, DX, DZ = 8, 6, 3, 100.0, 10.0
+NX, NY, NZ, DX, DZ = 8, 6, 3, 100.0, 40.0
 TRACE = np.array([[300.0, 0.0], [600.0, 600.0]])   # fault trace at the top, z = 0
-LEAN = 40.0                                         # fault pillars move 40 m east by z = 80
-THROW = 7.0
+LEAN = 75.0                             # hanging-wall pillars move 75 m east by the base
+THROW = 25.0
 SEED, FAR = (0, NX - 1), (NY - 1, 0)       # (j, i) columns on the moving / fixed side
 
 
 def layer_cake(leaning=()):
-    """Flat 10 m layers; pillars in `leaning` keep their top and move LEAN m east at z = 80."""
-    coord = [(i * DX, j * DX, 0.0, i * DX + (LEAN if (i, j) in leaning else 0.0), j * DX, 80.0)
+    """Flat DZ m layers; pillars in `leaning` keep their top and move LEAN m east at the base."""
+    coord = [(i * DX, j * DX, 0.0, i * DX + (LEAN if (i, j) in leaning else 0.0), j * DX, NZ * DZ)
              for j in range(NY + 1) for i in range(NX + 1)]
-    depth = np.repeat(np.arange(NZ) * DZ, 2) + np.tile([0.0, DZ], NZ)   # 0,10,10,20,20,30
+    depth = np.repeat(np.arange(NZ) * DZ, 2) + np.tile([0.0, DZ], NZ)   # 0,40,40,80,80,120
     zcorn = np.broadcast_to(depth[:, None, None], (2 * NZ, 2 * NY, 2 * NX)).ravel()
     return CornerPointGrid((NX, NY, NZ), np.array(coord), zcorn.astype(float),
                            np.ones(NX * NY * NZ, np.int8))
@@ -117,7 +119,7 @@ def write_deck(grid, faces, path, header):
 
 
 def reprocess(path, block):
-    """Re-read the deck; return {(k fixed, k moving): area} across the fault, cells, volumes."""
+    """Re-read the deck; return {(k fixed, k moving): area} across the fault, cell volumes."""
     topology = build_topology(from_grdecl(read_grdecl(path)))
     areas = face_geometry(topology.nodes, topology.faces, topology.cell_corners)
     volumes = cell_geometry(topology.nodes, topology.faces, topology.cell_faces, areas).volumes
@@ -132,7 +134,7 @@ def reprocess(path, block):
         fixed, moving = (ca, cb) if block[cb[1], cb[0]] else (cb, ca)
         key = (int(fixed[2]), int(moving[2]))
         found[key] = found.get(key, 0.0) + float(areas.areas[face])
-    return found, ijk, volumes
+    return found, volumes
 
 
 def overlap(k_fixed, k_moving):
@@ -166,39 +168,33 @@ def run(name, grid, faces, out):
         "the slide opened a face that is not in FAULTS"
 
     per_metre = area_per_metre(after, faces)
-    found, ijk, volumes = reprocess(path1, block)
+    found, volumes = reprocess(path1, block)
     expected = {(kf, km): per_metre * overlap(kf, km)
                 for kf in range(NZ) for km in range(NZ) if overlap(kf, km) > 0}
     assert found.keys() == expected.keys(), (sorted(found), sorted(expected))
     for key, area in found.items():
         assert np.isclose(area, expected[key], rtol=1e-9), (key, area, expected[key])
 
-    # Corners on a leaning fault pillar move east as they slide down it, so only moving cells
-    # that touch a fault pillar can change volume; the fixed block cannot change at all.
-    _, _, volumes0 = reprocess(path0, block)
-    fault_pillars = {p for f in faces for p in face_pillars(f)}
-    touches = np.array([any((i + di, j + dj) in fault_pillars for di in (0, 1) for dj in (0, 1))
-                        for i, j, _ in ijk])
-    moving = block[ijk[:, 1], ijk[:, 0]]
-    change = volumes / volumes0 - 1.0
-    changed = ~np.isclose(change, 0.0, atol=1e-12)
-    assert not changed[~moving].any(), "a fixed cell changed volume"
-    assert not changed[~touches].any(), "a cell away from the fault pillars changed volume"
+    # Every hanging-wall pillar leans the same way, so every moving corner slides by the same
+    # vector: the block translates rigidly along the fault and no cell changes volume.
+    _, volumes0 = reprocess(path0, block)
+    assert np.allclose(volumes, volumes0, rtol=1e-9, atol=0.0), "a cell changed volume"
 
     n_x = sum(f.face == "X" for f in faces)
     pairs = ", ".join(f"k{kf}|k{km} {a:,.0f}" for (kf, km), a in sorted(found.items()))
     print(f"{name}: {len(faces)} faces ({n_x} X, {len(faces) - n_x} Y), fault area "
           f"{per_metre:6.1f} m2 per m of depth, {block.sum()} columns slid {THROW:g} m")
     print(f"  contacts fixed|moving m2: {pairs}")
-    print(f"  {changed.sum()} moving cells next to the fault changed volume, "
-          f"{change[changed].min():+.1%} to {change[changed].max():+.1%}")
+    print("  no cell changed volume: the hanging wall moved as one rigid piece")
     return per_metre
 
 
 def main(out):
     out.mkdir(parents=True, exist_ok=True)
     staircase = fault_faces_for(layer_cake(), TRACE)
-    regular = layer_cake({p for f in staircase for p in face_pillars(f)})
+    hanging = {(i + di, j + dj) for j, i in zip(*np.nonzero(moving_block(staircase)))
+               for di in (0, 1) for dj in (0, 1)}            # every pillar of a moving column
+    regular = layer_cake(hanging)
     assert fault_faces_for(regular, TRACE) == staircase, "the lean should not move the tops"
     adapted = adapt_grid(regular, TRACE, boundary="pinned", w0=0.05, polish="barrier",
                          on_invalid="raise")
