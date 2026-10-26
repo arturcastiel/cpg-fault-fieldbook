@@ -2,8 +2,8 @@
 [cpg2unstructured]
 repository = "https://github.com/arturcastiel/cpg2python"
 local_directory = "../cpg2python"
-revision = "e4637ccedf82c82f5c081bb909b354a7b919c6be"
-version = "0.2.0"
+revision = "2d41127f66002b5d0b496cba84d0507ce9c354ce"
+version = "0.3.0"
 
 [fault_projections]
 repository = "https://github.com/arturcastiel/fault-projections"

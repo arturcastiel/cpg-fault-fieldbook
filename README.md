@@ -62,6 +62,7 @@ secrets, so their CI stops at that step.
 | Curved fault | `16_faceted_fault` | Two joined planar facets drive independent top/bottom targets |
 | Coordinate frame | `17_mapaxes_guard` | Expected writer error for transformed EGRID geometry |
 | Reproducibility | `18_case_dossier --out PATH` | JSON case report with input hash, revisions, settings and gates |
+| Z slide | `19_z_slide_sequential`, `20_z_slide_partial_fault` (`--out PATH` keeps the decks) | ZCORN-only fault slides: two faults in sequence, a fault ending inside the grid with a tapered throw, re-processed contacts |
 
 The [function reference](docs/functions/index.md) documents high-impact calls;
 the [API coverage inventory](docs/reference/coverage.md) distinguishes

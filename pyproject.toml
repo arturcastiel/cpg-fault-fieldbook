@@ -9,7 +9,7 @@ description = "Runnable, source-linked field guide to corner-point grids and fau
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "GPL-3.0-or-later"}
-dependencies = ["cpg2unstructured==0.2.0", "fault-projections==0.1.0"]
+dependencies = ["cpg2unstructured==0.3.0", "fault-projections==0.1.0"]
 
 [project.optional-dependencies]
 test = ["pytest>=7"]

@@ -4,7 +4,8 @@
   so physical outline motion can be nonzero despite `result.ok`.
   Reproduce with `10_sheared_rim`; prefer `pinned`.
 - **Field topology:** full `build_topology` currently fails on the
-  documented Norne deck (face with more than two neighbours);
+  documented Norne deck with `NonMatchingZError` (a fault polygon at
+  i=4–5, j=2 needs more than four corners);
   `regenerate_faults=True` is unsafe to assume there. `False`
   adapts the grid only and **does not output regenerated FAULTS**.
 - **3D input:** dipping polygons/facets produce independent top/bottom
@@ -13,6 +14,15 @@
   add a project-specific floor and inspect both planes.
 - **Deck semantics:** generating an INCLUDE does not rewrite or
   validate a simulator deck, transmissibility or flow.
+- **Z slide (lessons 19–20):** this is not yet a library call; the
+  lessons edit ZCORN directly.
+  - A rigid slide needs FAULTS that close a block. A fault ending
+    inside the grid needs a throw that tapers to zero at its tip.
+  - If the throw passes a multiple of the layer thickness inside one
+    cell face, re-processing raises `NonMatchingZError`.
+  - On tilted fault pillars, cells bounded by a moved pillar change
+    volume, while their thickness is preserved.
+  - Inactive cells and slides across K faces are not covered.
 - **Packaging caveat:** six `cpg2unstructured.__all__` names are
   unbound at package root in the pinned revision: `depth_crossings`,
   `corner_folds`, `proximity_violations`, `elastic_stiffness`,

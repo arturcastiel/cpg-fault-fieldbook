@@ -15,6 +15,7 @@ nav:
       - Fault projection: learn/faults.md
       - Deformation: learn/deformation.md
       - Validation and export: learn/validation.md
+      - Slide a fault in Z: learn/z-slide.md
   - Methods:
       - Index: functions/index.md
       - Grid input: functions/grid-input.md

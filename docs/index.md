@@ -32,7 +32,7 @@ GRDECL/EGRID → pillar grid → morph_pillars (cpg2unstructured)
 
 **Start:** [install](start/install-linux.md) → [read a grid](learn/grids.md)
 → [project a fault](learn/faults.md) → [deform](learn/deformation.md)
-→ [judge and export](learn/validation.md).
+→ [judge and export](learn/validation.md) → [slide a fault in Z](learn/z-slide.md).
 
 The [previous standalone HTML wiki](legacy-field-guide.html) remains an
 additional dated snapshot. Its file links assume the two upstream
