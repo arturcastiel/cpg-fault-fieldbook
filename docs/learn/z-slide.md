@@ -10,7 +10,7 @@ derived from depth has to be **re-processed** from the new deck with
 - the exposed fault pieces that become boundary;
 - face areas and cell volumes.
 
-Both lessons below write each deck, read it back, and assert what the
+The lessons below write each deck, read it back, and assert what the
 rebuilt topology reports.
 
 The lessons index corners with the corner cube
@@ -94,7 +94,50 @@ the fault, applied to every corner east of the line.
 
 {{ example:20_z_slide_partial_fault.py }}
 
+## A fault oblique to the grid
+
+Run `python -m fieldbook.cli run 21_z_slide_oblique_fault`. Add
+`--out DIR` to keep the four decks.
+
+The fault trace runs from (300, 0) to (600, 600), 27° off the J axis,
+so no single pillar line carries it. `fault_faces_for` turns it into a
+**staircase** of 6 X faces and 3 Y faces. The flood fill and the
+throw check therefore treat both directions:
+
+- an X face at pillar line `i` compares slots `2i-1 | 2i` along I;
+- a Y face at pillar row `j` compares slots `2j-1 | 2j` along J.
+
+The lesson runs the same slide on two decks with identical FAULTS:
+
+- **A, regular grid:** the staircase follows the grid lines, so the
+  fault is 900 m long in plan.
+- **B, adapted grid:** `adapt_grid(..., boundary="pinned")` moves the
+  fault pillars onto the trace. The FAULTS faces are unchanged
+  (`faces_invariant`), and the fault is 710.6 m long, against 670.8 m
+  for the trace itself.
+
+![Oblique fault, regular and adapted grids](../assets/z-slide/oblique-fault.png)
+
+**What to expect:**
+
+- **The slide:** in both decks the south-east block of 21 columns
+  slides 7 m. COORD and FAULTS are unchanged.
+- **Faces that open:** exactly the 9 FAULTS faces lose shared
+  corners, X and Y alike.
+- **Contacts:** the same five layer pairs touch in both decks. Each
+  area is the fault's plan length times the depth overlap, so A
+  carries 27 % more contact area than B. For example, fixed k1 |
+  moving k0 is 6,300 m² in A and 4,974 m² in B.
+- **Volumes:** the pillars are vertical, so no cell changes volume.
+- **Steep traces:** keep `adapt_grid` traces gentle on small grids.
+  At about 30° or more off the axis here, the regenerated FAULTS
+  include a face on the grid rim and `faces_invariant` is False. The
+  staircase from `fault_faces_for` on the regular grid is still
+  usable.
+
+{{ example:21_z_slide_oblique_fault.py }}
+
 The figures are drawn from the decks that `--out` writes. The plotted
-numbers are the ones the lessons print. Both cases are synthetic layer
+numbers are the ones the lessons print. All cases are synthetic layer
 cakes: nothing here checks simulator acceptance, transmissibility or
 flow. See also the [known limits](../reference/limits.md).

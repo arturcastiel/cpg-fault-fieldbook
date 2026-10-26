@@ -14,7 +14,7 @@
   add a project-specific floor and inspect both planes.
 - **Deck semantics:** generating an INCLUDE does not rewrite or
   validate a simulator deck, transmissibility or flow.
-- **Z slide (lessons 19–20):** this is not yet a library call; the
+- **Z slide (lessons 19–21):** this is not yet a library call; the
   lessons edit ZCORN directly.
   - A rigid slide needs FAULTS that close a block. A fault ending
     inside the grid needs a throw that tapers to zero at its tip.
@@ -23,6 +23,11 @@
   - On tilted fault pillars, cells bounded by a moved pillar change
     volume, while their thickness is preserved.
   - Inactive cells and slides across K faces are not covered.
+- **Steep traces with `adapt_grid`:** on lesson 21's 8×6 grid, a
+  trace from the south rim to the north rim at about 30° or more off
+  J makes the regenerated FAULTS include a rim face (`j=0`), so
+  `faces_invariant` is False. Use `fault_faces_for` on the unadapted
+  grid, or a gentler trace.
 - **Packaging caveat:** six `cpg2unstructured.__all__` names are
   unbound at package root in the pinned revision: `depth_crossings`,
   `corner_folds`, `proximity_violations`, `elastic_stiffness`,
