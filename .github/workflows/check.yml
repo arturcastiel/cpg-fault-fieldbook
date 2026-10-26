@@ -15,7 +15,22 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install "cpg2unstructured[fast] @ git+https://github.com/arturcastiel/cpg2python.git@e4637ccedf82c82f5c081bb909b354a7b919c6be"
-      - run: python -m pip install "fault-projections @ git+https://github.com/arturcastiel/fault-projections.git@0837f07dd97961d2e5e92b26fd0dea7f7d8e3291"
+      # fault-projections is private: clone it with a read-only token
+      # (secret FAULT_PROJECTIONS_TOKEN). The URL rewrite lives only in this
+      # step's environment, so the token never reaches pip or disk.
+      - name: Install fault-projections (private)
+        shell: bash
+        env:
+          FP_TOKEN: ${{ secrets.FAULT_PROJECTIONS_TOKEN }}
+        run: |
+          if [ -z "$FP_TOKEN" ]; then
+            echo "::error::Secret FAULT_PROJECTIONS_TOKEN is not set (read-only token for arturcastiel/fault-projections, see README)."
+            exit 1
+          fi
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="url.https://x-access-token:${FP_TOKEN}@github.com/arturcastiel/fault-projections.insteadOf"
+          export GIT_CONFIG_VALUE_0="https://github.com/arturcastiel/fault-projections"
+          python -m pip install "fault-projections @ git+https://github.com/arturcastiel/fault-projections.git@0837f07dd97961d2e5e92b26fd0dea7f7d8e3291"
       - run: python -m pip install -e ".[test,docs]"
       - run: python -m fieldbook.cli doctor
       - run: python -m pytest -q

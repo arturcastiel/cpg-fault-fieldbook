@@ -41,6 +41,13 @@ standalone guide](docs/legacy-field-guide.html). Use
 `.[docs]` and run `python -m fieldbook.docs --check` to verify that example
 inclusions and local links resolve.
 
+**CI.** `fault-projections` is a private repository, so the workflow needs a
+repository secret `FAULT_PROJECTIONS_TOKEN`: a fine-grained personal access
+token with *Contents: read-only* on `arturcastiel/fault-projections` only.
+Set it with `gh secret set FAULT_PROJECTIONS_TOKEN -R
+arturcastiel/cpg-fault-fieldbook`. Pull requests from forks do not receive
+secrets, so their CI stops at that step.
+
 ## What is covered now
 
 | Track | Runnable source | What you learn |
