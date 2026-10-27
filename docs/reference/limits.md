@@ -14,10 +14,13 @@
   add a project-specific floor and inspect both planes.
 - **Deck semantics:** generating an INCLUDE does not rewrite or
   validate a simulator deck, transmissibility or flow.
-- **Z slide (lessons 19–21):** this is not yet a library call; the
+- **Z slide (lessons 19–22):** this is not yet a library call; the
   lessons edit ZCORN directly.
   - A rigid slide needs FAULTS that close a block. A fault ending
     inside the grid needs a throw that tapers to zero at its tip.
+    Lesson 22 shapes that taper with a profile, a decay distance and
+    a footwall share; the decay is a distance kernel, not a solved
+    elastic field.
   - If the throw passes a multiple of the layer thickness inside one
     cell face, re-processing raises `NonMatchingZError`.
   - On tilted fault pillars, cells bounded by a moved pillar change

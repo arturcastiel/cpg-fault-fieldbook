@@ -156,6 +156,64 @@ keeps the rim pillars vertical, and this fault ends on the rim.
 
 {{ example:21_z_slide_oblique_fault.py }}
 
+## Control the throw around a fault tip
+
+Run `python -m fieldbook.cli run 22_z_slide_throw_control`. Add
+`--out DIR` to keep the twelve decks.
+
+A fault that ends inside the grid cannot slide rigidly. The lesson
+first tries a uniform 16 m slide of the east side: it opens four faces
+past the tip that are not in FAULTS, so it is refused. The throw must
+fall to zero at the tip. Lesson 20 picks one way to do that; this
+lesson builds the same kind of pillar field from three controls:
+
+- **Profile:** the relative throw rises from 0 at each tip, linearly
+  or as a cosine, over a taper length. Past the taper the full throw
+  applies.
+- **Far field:** either the whole side moves with its nearest fault
+  point, or the motion fades to zero at a decay distance from the
+  fault.
+- **Share:** the hanging wall (east) goes down by its share of the
+  throw; the footwall (west) goes up by the rest.
+
+The grid is 16×12×3 with 50 m columns and 20 m layers. The fault lies
+on pillar line 8 (x = 400 m) and the full throw is 16 m.
+
+| Case | Profile | Far field | Hanging-wall share | Throw on the fault, south to north (m) |
+| --- | --- | --- | --- | --- |
+| A | linear, full length | whole side | 100 % | 16, 14, 12, ... 2, 0 (lesson 20's shape) |
+| B | cosine, last 150 m | whole side | 100 % | 16 ×6, 12, 4, 0 |
+| C | cosine, full length | whole side | 100 % | 16, 15.4, 13.7, ... 0.6, 0 |
+| D | as C | decay 300 m | 100 % | as C |
+| E | as C | decay 300 m | 50 % | as C |
+| F | cosine, two tips | decay 300 m | 70 % | 0, 2.3, 8, 13.7, 16, 13.7, 8, 2.3, 0 |
+
+![Six throw fields around a fault tip](../assets/z-slide/throw-control.png)
+
+![The same six throw fields in 3D](../assets/z-slide/throw-control-3d.png)
+
+**What to expect:**
+
+- **Whole side (A–C):** each row of the east side moves by that row's
+  throw, all the way to the east rim, so the side tilts like a plank
+  hinged at the tip. B is almost a rigid slide with a smooth hinge.
+- **Decay (D–F):** the motion fades to zero 300 m from the fault, so
+  the grid rims stay put and the throw is a local feature. The
+  relative throw on the fault is unchanged: C, D and E have the same
+  throw curve.
+- **Share (E, F):** in E the hanging wall goes down 8 m and the
+  footwall comes up 8 m at the fault. F has two tips, a bell-shaped
+  throw and a 70/30 share: 11.2 m down, 4.8 m up at its centre.
+- **Checks:** every case keeps COORD and FAULTS, opens exactly the
+  FAULTS faces, keeps every cell volume, and re-processes to contact
+  areas that match the analytic overlaps.
+- **Which to pick:** use a rigid slide when FAULTS close a block
+  (lessons 19 and 21). Otherwise taper the throw to zero at each tip,
+  and choose the far field and share to match the geology. The
+  library call will expose these three controls.
+
+{{ example:22_z_slide_throw_control.py }}
+
 The figures are drawn from the decks that `--out` writes. The plotted
 numbers are the ones the lessons print. All cases are synthetic layer
 cakes: nothing here checks simulator acceptance, transmissibility or
