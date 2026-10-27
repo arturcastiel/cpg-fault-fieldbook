@@ -19,6 +19,8 @@ Each figure shows, per case, a plan map of how far the top of each
 column moved, with the FAULTS in black, and a 3D view of the slid grid
 with the fault faces the slide exposes in red. All cases are
 synthetic: nothing here checks simulator acceptance or flow.
+`python tools/figures/make_figures.py --only 10 11 12 13 14 15 16`
+redraws them, with an interactive 3D HTML per lesson.
 
 > **The slide helper.** The lessons share `fieldbook/zslide.py`, a
 > prototype of the planned slide call. It follows the defaults chosen

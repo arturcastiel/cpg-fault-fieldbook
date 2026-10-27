@@ -214,6 +214,31 @@ on pillar line 8 (x = 400 m) and the full throw is 16 m.
 
 {{ example:22_z_slide_throw_control.py }}
 
+## How it started: the topology fix behind the slide
+
+A first spike slid the east block of a tilted fault 15 m by editing
+ZCORN only, then re-processed the deck. With `cpg2unstructured` 0.2.0
+it gave wrong answers. Version 0.3.0 fixes three things:
+
+- cells across a fault are paired by **depth overlap**, not by layer
+  index, and the unpaired parts become boundary faces;
+- faces that are not rectangles get their true area;
+- cell volumes are right on tilted pillars and in pinch-outs.
+
+![Cells paired by depth overlap after the fix](../assets/z-slide/background/fault-topology-fix.png)
+
+![Face areas and cell volumes before and after the fix](../assets/z-slide/background/face-area-fix.png)
+
+![The spike: east block slid 15 m along tilted pillars](../assets/z-slide/background/z-slide-spike.png)
+
+![The spike in 3D](../assets/z-slide/background/z-slide-spike-3d.png)
+
+![The fault surface after the slide](../assets/z-slide/background/fault-surface-3d.png)
+
+These five figures are snapshots: they compare 0.2.0 with 0.3.0, so
+they are not regenerated. The lesson figures above are; run
+`python tools/figures/make_figures.py` (see the README).
+
 The figures are drawn from the decks that `--out` writes. The plotted
 numbers are the ones the lessons print. All cases are synthetic layer
 cakes: nothing here checks simulator acceptance, transmissibility or

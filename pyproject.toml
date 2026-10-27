@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cpg-fault-fieldbook"
-version = "0.1.0"
+version = "0.2.0"
 description = "Runnable, source-linked field guide to corner-point grids and fault projection"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,6 +14,7 @@ dependencies = ["cpg2unstructured==0.3.0", "fault-projections==0.1.0"]
 [project.optional-dependencies]
 test = ["pytest>=7"]
 docs = ["mkdocs>=1.5,<2"]
+figures = ["matplotlib>=3.7", "plotly>=5"]
 
 [project.scripts]
 cpg-fieldbook = "fieldbook.cli:main"
