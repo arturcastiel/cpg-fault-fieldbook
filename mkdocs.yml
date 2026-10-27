@@ -16,6 +16,7 @@ nav:
       - Deformation: learn/deformation.md
       - Validation and export: learn/validation.md
       - Slide a fault in Z: learn/z-slide.md
+      - "Gallery: slides with meshing and regridding": learn/gallery.md
   - Methods:
       - Index: functions/index.md
       - Grid input: functions/grid-input.md

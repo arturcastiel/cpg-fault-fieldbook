@@ -19,6 +19,7 @@ export drift.
 | Export / read-only deck intake | `adapt_deck`, readers | 11, 13 | Grid INCLUDE only; no simulator check |
 | EGRID/MAPAXES | Reader reference | 02_egrid, 17_mapaxes_guard | Bundled upstream reader fixture; no simulator round trip |
 | ZCORN-only Z slide | None yet: the lessons edit the corner cube directly | 19_z_slide_sequential, 20_z_slide_partial_fault, 21_z_slide_oblique_fault, 22_z_slide_throw_control | Synthetic only; library call planned |
+| Slide gallery | Prototype helper `fieldbook/zslide.py` (not a library call) | 23–29 gallery lessons, 38 cases | Synthetic only; exercises `adapt_grid`, `adapt_deck`, stage-2 polygons, faceted and quad-mesh projection, `cell_corridor`, VTK writers |
 | Shapefile and VTK plotting | Legacy description | None yet | Not verified end-to-end here |
 | Other root exports/types/errors | Legacy directory | Upstream tests only | Reference expansion pending |
 
