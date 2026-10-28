@@ -11,8 +11,9 @@ by editing ZCORN only:
 - B growth fault: the hanging wall of the crossing fault slides 5 m at the top and 27 m at the
   base, so its layers thicken, as in a syn-sedimentary fault; volume grows by exactly the
   extra thickness times the plan area;
-- C large throw: a 60 m peak throw on 25-35 m layers; without snapping, re-processing rejects
-  the grid, and snapping puts every horizon crossing on a pillar (throw beyond the layering);
+- C large throw: a 60 m peak throw on 25-35 m layers; without snapping, horizons cross inside
+  fault faces, which are cut at intersection nodes with contacts still exact; snapping puts
+  every horizon crossing on a pillar instead (throw beyond the layering);
 - D restoration: the opposite throw restores ZCORN to round-off (structural restoration, undo);
   this holds while the snap is inactive, as the snap is not linear in the throw;
 - E inversion: +20 m then -8 m equals one +12 m slide, for blocks and for fields (tectonic
@@ -32,13 +33,14 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
-from cpg2unstructured import NonMatchingZError, pillar_lattice
+from cpg2unstructured import pillar_lattice
 from fault_projections import adapt_grid
 from fault_projections.from_faults import trace_faults
 
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              corner_cube, interior, layer_cake, process, realized_throw,
-                              slide_blocks, slide_field, unwelded_faces, write_deck)
+                              corner_cube, crossed_faces, interior, layer_cake, process,
+                              realized_throw, slide_blocks, slide_field, unwelded_faces,
+                              write_deck)
 
 NX, NY, DX = 24, 16, 50.0
 DZ = [25.0, 30.0, 25.0, 35.0]
@@ -135,14 +137,12 @@ def case_b(grid, faces, out):
 def case_c(grid, faces, out):
     spec = Throw(tuple(faces), throw=60.0, hanging_side=HW_PARTIAL, snap=False)
     raw = slide_field(grid, spec)
-    try:
-        process(raw)
-        rejected = False
-    except NonMatchingZError:
-        rejected = True
-    assert rejected, "a 60 m throw on 25-35 m layers must cross a horizon inside a face"
     snapped = slide_field(grid, replace(spec, snap=True))
     checked("C_large_throw", grid, snapped, faces, out)
+    checked("C_large_throw", grid, raw, faces, out, tag="2_unsnapped")
+    crossed = crossed_faces(process(raw).topology)
+    assert crossed > 0, "a 60 m throw on 25-35 m layers must cross a horizon inside a face"
+    assert crossed_faces(process(snapped).topology) == 0
     t_raw = realized_throw(grid, raw, faces, HW_PARTIAL)[:, 1]
     t_snap = realized_throw(grid, snapped, faces, HW_PARTIAL)[:, 1]
     offsets = np.unique(np.round(np.subtract.outer(np.cumsum([0.0] + DZ),
@@ -152,8 +152,8 @@ def case_c(grid, faces, out):
     assert all(np.isclose(offsets, t).any() for t in t_snap[moved]), "snap onto a boundary"
     rows = "\n".join(f"{m},{a:.6f},{b:.6f}" for m, (a, b) in enumerate(zip(t_raw, t_snap)))
     (out / "C_large_throw.csv").write_text("pillar,unsnapped_m,snapped_m\n" + rows + "\n")
-    print("C_large_throw      peak 60 m on 25-35 m layers: snap=False rejected, snap=True "
-          "re-processes")
+    print(f"C_large_throw      peak 60 m on 25-35 m layers: snap=False cuts {crossed} faces at "
+          "horizon crossings, snap=True none; both re-process with exact contacts")
     print("  unsnapped: " + " ".join(f"{t:.0f}" for t in t_raw) + " m")
     print("  snapped:   " + " ".join(f"{t:.0f}" for t in t_snap)
           + f" m; {moved.sum()} pillars moved, max {t_snap.max():.1f} m")

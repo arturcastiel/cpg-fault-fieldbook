@@ -17,7 +17,8 @@ the east, vertical pillars), regrids or adapts it, slides the result and re-proc
 - D UTM invariance: case C at the origin and at (452000, 6780000): same FAULTS, same slid ZCORN,
   same contacts and volumes up to round-off (decks in map coordinates);
 - E active outline: an elliptic ACTNUM outline with an inactive patch; the FAULTS keep only faces
-  between active columns and re-processing drops the inactive cells (field outlines, pinch-outs);
+  between active columns, re-processing drops the inactive cells, and an inactive cell against
+  the slid fault turns its contacts into boundary faces (field outlines, pinch-outs);
 - F damage zone: the cell corridor of the slid fault grows into a two-band damage zone whose
   PERMX is cut 10x and 3x and written into the deck (fault-zone permeability).
 
@@ -30,8 +31,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
-from cpg2unstructured import (NonMatchingZError, boundary_mask, cell_quality, format_keyword,
-                              pillar_lattice, read_grdecl)
+from cpg2unstructured import (boundary_mask, cell_quality, format_keyword, pillar_lattice,
+                              read_grdecl)
 from fault_projections import adapt_grid, targets_from_polyline
 from fault_projections.adapt import fault_faces_from_chain
 from fault_projections.corridor import cell_corridor
@@ -272,20 +273,27 @@ def case_e(out):
     assert len(after.volumes) == act.sum(), "re-processing must drop the inactive cells"
     assert np.array_equal(np.isnan(after.volume_grid(grid.cart_dims)), ~act)
     assert all(not all(column[c] for c in face_columns(f)) for f in set(cut) - set(faces))
-    # A pinch-out against the fault: cpg2unstructured needs all-active faulted stacks.
+    # A pinch-out against the fault: layer 1 goes inactive on both sides of one fault face. The
+    # contacts of those two cells vanish, the cells that faced them get boundary faces, and every
+    # other contact keeps its area.
     act2 = act.copy()
     for c in face_columns(faces[len(faces) // 2]):
         act2[c + (1,)] = False
-    try:
-        process(replace(slid, actnum=act2.transpose(2, 1, 0).ravel().astype(np.int8)))
-        raise AssertionError("an inactive cell in a faulted stack should be rejected")
-    except NonMatchingZError:
-        pass
+    holed = process(replace(slid, actnum=act2.transpose(2, 1, 0).ravel().astype(np.int8)))
+    assert len(holed.volumes) == act2.sum()
+    kept = {key: a for key, a in after.contacts(faces).items()
+            if all(act2[c + (k,)] for c, k in zip(face_columns(key[0]), key[1:]))}
+    got = holed.contacts(faces)
+    assert got.keys() == kept.keys() and all(np.isclose(got[k], kept[k]) for k in kept)
+    lost = len(after.contacts(faces)) - len(kept)
+    rims = [int(((p.topology.faces.neighbours[:, 1] < 0) & (p.topology.faces.direction < 2)).sum())
+            for p in (after, holed)]
     print(f"{name:20s} {column.sum()}/{column.size} columns, {len(after.volumes)} cells active, "
           f"all re-processed; outline pillars moved {rim_move:.1f} m")
     print(f"{'':20s} {len(cut)} faces cut, the {len(faces)} between active columns in FAULTS; "
           f"contact {contact:,.0f} m2")
-    print(f"{'':20s} an inactive cell beside the slid fault: process raises NonMatchingZError")
+    print(f"{'':20s} layer 1 inactive on both sides of one fault face: {lost} contacts vanish, "
+          f"{rims[1] - rims[0]} new boundary faces")
 
 
 def case_f(out):
