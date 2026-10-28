@@ -77,19 +77,24 @@ This snippet was run against the pinned revisions.
 
 ```python
 slide_deck(deck, throws, out_dir, *, prefix="slid", faults=None, vtk=False,
-           **slide_kw) -> SlideResult
+           png=False, **slide_kw) -> SlideResult
 ```
 
 Reads a deck, slides it and writes `<prefix>_grid.grdecl` (COORD, ZCORN,
 ACTNUM) and `<prefix>_report.txt`. `faults` defaults to the deck's own `FAULTS`
 (INCLUDE is followed), so a throw can name a fault: `Throw("F1", 20.0)`. The
 `FAULTS` set does not change, so replace the grid in the deck with
-`INCLUDE '<prefix>_grid.grdecl' /`.
+`INCLUDE '<prefix>_grid.grdecl' /`. `png=True` also writes `<prefix>_slide.png`:
+a plan map of the top shift with the fault chains, and the realized throw
+along each fault (`viz.plot_slide(res)`, `write_slide_png(res, path)`; needs
+matplotlib).
 
 Lesson 30 slides Norne's E_01 (5 m, fading to its tips) and BC (3 m, rigid)
 through a deck: 8 faces open, none outside `FAULTS`, a round trip returns to
 5e-13 m and cell volumes change by up to 2.4 % on the tilted pillars. To adapt
-and slide in one call, use [`adapt_deck(slide=...)`](adapt-grid.md#adapt_deck).
+and slide in one call, use [`adapt_deck(slide=...)`](adapt-grid.md#adapt_deck);
+case C does it for a dipping polygon with `top_trace="auto"`. With matplotlib
+installed, cases B and C also write a PNG.
 
 {{ example:30_deck_slide_workflows.py }}
 
@@ -115,7 +120,7 @@ and slide in one call, use [`adapt_deck(slide=...)`](adapt-grid.md#adapt_deck).
 
 ## Source and tests
 
-- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/slide.py)
-  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_slide.py)
+- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/fault_projections/slide.py)
+  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/tests/test_slide.py)
 - [`zcorn_ops`](https://github.com/arturcastiel/cpg2python/blob/7d98aebbd64b03ee4623cf0c97e01dd19cda9f5b/cpg2unstructured/zcorn_ops.py)
 - Lessons 19–30 ([Z slide](../learn/z-slide.md), [gallery](../learn/gallery.md))

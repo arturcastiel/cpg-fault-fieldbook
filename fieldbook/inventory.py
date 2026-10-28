@@ -19,7 +19,9 @@ PAGES = {
         "ValidityExhausted", "ValidityExhaustedWarning",
     },
     "targets-corridors.md": {"targets_from_polyline", "targets_from_polylines"},
-    "adapt-grid.md": {"adapt_grid", "adapt_deck", "AdaptResult"},
+    "adapt-grid.md": {
+        "adapt_grid", "adapt_deck", "AdaptResult", "surface_top_trace", "live_faces",
+    },
     "surface-projection.md": {
         "project_fault_surface", "project_quad_mesh_surface",
         "FaultSurface", "QuadMesh",
@@ -27,7 +29,7 @@ PAGES = {
     "fault-slide.md": {
         "slide_grid", "slide_deck", "Throw", "SlideResult", "SlideError", "Connection",
         "zcorn_cube", "with_zcorn", "apply_zcorn_displacement", "unwelded_faces",
-        "zcorn_validity", "ZcornValidity",
+        "zcorn_validity", "ZcornValidity", "write_slide_png",
     },
 }
 

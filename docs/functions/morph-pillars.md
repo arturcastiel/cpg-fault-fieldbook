@@ -163,6 +163,6 @@ and simulator checks.
 - [Pillar lattice definitions](https://github.com/arturcastiel/cpg2python/blob/e4637ccedf82c82f5c081bb909b354a7b919c6be/cpg2unstructured/pillars.py)
 - [Validity gate](https://github.com/arturcastiel/cpg2python/blob/e4637ccedf82c82f5c081bb909b354a7b919c6be/cpg2unstructured/validity.py)
 - [Validity and exhausted-bracket tests](https://github.com/arturcastiel/cpg2python/blob/e4637ccedf82c82f5c081bb909b354a7b919c6be/tests/test_validity_scope.py)
-- [Trace-to-target and morph tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_targets.py)
+- [Trace-to-target and morph tests](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/tests/test_targets.py)
 - [Fieldbook guidance and evidence](../legacy-field-guide.html)
 

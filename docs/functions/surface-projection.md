@@ -106,7 +106,7 @@ print(surface.face_ids.size, surface.area)
 ```
 
 The full fixture construction and ridge geometry are in
-[`tests/test_quad_surface.py`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_quad_surface.py);
+[`tests/test_quad_surface.py`](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/tests/test_quad_surface.py);
 that test suite demonstrates a sharp two-patch ridge with no interior holes.
 This excerpt is source-based and has not been run as a standalone snippet.
 
@@ -126,12 +126,12 @@ This excerpt is source-based and has not been run as a standalone snippet.
 
 ## Source and tests
 
-- [`project_fault_surface`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/surface.py)
-  · [Planar surface tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_surface.py)
-- [`project_quad_mesh_surface`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/quad_surface.py)
-- [Quad mesh input and validation](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/skeleton.py)
-  · [Validation implementation](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/validate.py)
-- [Watertight quad-surface tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_quad_surface.py)
+- [`project_fault_surface`](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/fault_projections/surface.py)
+  · [Planar surface tests](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/tests/test_surface.py)
+- [`project_quad_mesh_surface`](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/fault_projections/quad_surface.py)
+- [Quad mesh input and validation](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/fault_projections/skeleton.py)
+  · [Validation implementation](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/fault_projections/validate.py)
+- [Watertight quad-surface tests](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/tests/test_quad_surface.py)
 - [Related `cpg2python` surface primitives](https://github.com/arturcastiel/cpg2python/blob/e4637ccedf82c82f5c081bb909b354a7b919c6be/cpg2unstructured/minimal_surface.py)
 - [Fieldbook limitations](../legacy-field-guide.html)
 

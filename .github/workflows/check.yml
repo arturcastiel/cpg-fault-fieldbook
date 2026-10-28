@@ -30,7 +30,7 @@ jobs:
           export GIT_CONFIG_COUNT=1
           export GIT_CONFIG_KEY_0="url.https://x-access-token:${FP_TOKEN}@github.com/arturcastiel/fault-projections.insteadOf"
           export GIT_CONFIG_VALUE_0="https://github.com/arturcastiel/fault-projections"
-          python -m pip install "fault-projections @ git+https://github.com/arturcastiel/fault-projections.git@7222fc49020a9817500a257b3a8cb9358b16cbc7"
+          python -m pip install "fault-projections @ git+https://github.com/arturcastiel/fault-projections.git@247507e70be854bbc18d6b02c27efeb59f998149"
       - run: python -m pip install -e ".[test,docs]"
       - run: python -m fieldbook.cli doctor
       - run: python -m pytest -q

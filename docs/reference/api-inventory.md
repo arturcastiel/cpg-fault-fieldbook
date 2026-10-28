@@ -150,6 +150,7 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `faults_from_deck` | yes | Directory only |
 | `fault_projections` | `faults_text` | yes | Directory only |
 | `fault_projections` | `faults_text_3d` | yes | Directory only |
+| `fault_projections` | `live_faces` | yes | [adapt-grid](../functions/adapt-grid.md) |
 | `fault_projections` | `parse_faults_text` | yes | Directory only |
 | `fault_projections` | `path_to_faults` | yes | Directory only |
 | `fault_projections` | `planarize_quad` | yes | Directory only |
@@ -170,6 +171,7 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `stitch_path` | yes | Directory only |
 | `fault_projections` | `stitch_paths` | yes | Directory only |
 | `fault_projections` | `surface_to_fault_faces` | yes | Directory only |
+| `fault_projections` | `surface_top_trace` | yes | [adapt-grid](../functions/adapt-grid.md) |
 | `fault_projections` | `targets_from_polyline` | yes | [targets-corridors](../functions/targets-corridors.md) |
 | `fault_projections` | `targets_from_polylines` | yes | [targets-corridors](../functions/targets-corridors.md) |
 | `fault_projections` | `to_plane_2d` | yes | Directory only |
@@ -179,3 +181,4 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `vtk` | yes | Directory only |
 | `fault_projections` | `write_faults` | yes | Directory only |
 | `fault_projections` | `write_faults_3d` | yes | Directory only |
+| `fault_projections` | `write_slide_png` | yes | [fault-slide](../functions/fault-slide.md) |
