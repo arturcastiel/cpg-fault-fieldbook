@@ -98,10 +98,10 @@ print(mesh.n_cells, mesh.faces.nodes.shape, mesh.cell_faces.shape)
 
 ### Failure modes and maturity
 
-- Non-matching-Z i/j faults have bounded support: i/j face dispatch handles
-  supported 4-corner fault polygons and all-active faulted stacks. Some
-  combinations (including inactive cells in a faulted stack or non-quad face
-  polygons) raise `NonMatchingZError`.
+- Non-matching-Z i/j faults are supported in general position (0.4.0):
+  inactive cells and pinch-outs beside a fault get boundary faces, and a
+  fault face where layer edges cross gets extra nodes (`faces.nodes` then
+  has more than 4 columns; `mesh3d.face_edges` raises for such faces).
 - Non-matching-Z k-direction faults are not implemented and raise
   `NonMatchingZError`.
 - Face deduplication raises `RuntimeError` if it finds a face with more than

@@ -60,8 +60,9 @@ results. Add `--out DIR` to keep the decks it writes.
 | 28 | `gallery_regridding` | **Gallery:** fault transfer, resolution, solver settings, ACTNUM, damage zone |
 | 29 | `gallery_export_workflows` | **Gallery:** simulator bundle, `adapt_deck`, VTK series, round trip |
 
-Lessons 23-29 share [`fieldbook/zslide.py`](fieldbook/zslide.py), a
-prototype of the planned Z-slide library call. The
+Lessons 23-29 share [`fieldbook/zslide.py`](fieldbook/zslide.py), which
+slides faults with `fault_projections.slide_grid` and adds the lessons'
+independent checks. The
 [Z-slide page](docs/learn/z-slide.md) and the
 [gallery page](docs/learn/gallery.md) explain every case with figures.
 

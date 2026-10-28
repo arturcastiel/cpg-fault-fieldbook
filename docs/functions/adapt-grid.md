@@ -142,10 +142,10 @@ evidence, not a claim of production readiness.
 
 ## Source and tests
 
-- [`adapt_grid`, `adapt_deck`, and `AdaptResult`](https://github.com/arturcastiel/fault-projections/blob/0837f07dd97961d2e5e92b26fd0dea7f7d8e3291/fault_projections/adapt.py)
-- [Adaptation tests](https://github.com/arturcastiel/fault-projections/blob/0837f07dd97961d2e5e92b26fd0dea7f7d8e3291/tests/test_adapt.py)
-- [2-D corridor example](https://github.com/arturcastiel/fault-projections/blob/0837f07dd97961d2e5e92b26fd0dea7f7d8e3291/examples/adapt_corridor.py)
-  · [Dipping-fault example](https://github.com/arturcastiel/fault-projections/blob/0837f07dd97961d2e5e92b26fd0dea7f7d8e3291/examples/adapt_dipping.py)
+- [`adapt_grid`, `adapt_deck`, and `AdaptResult`](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/fault_projections/adapt.py)
+- [Adaptation tests](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/tests/test_adapt.py)
+- [2-D corridor example](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/examples/adapt_corridor.py)
+  · [Dipping-fault example](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/examples/adapt_dipping.py)
 - [Morph solver](https://github.com/arturcastiel/cpg2python/blob/e4637ccedf82c82f5c081bb909b354a7b919c6be/cpg2unstructured/morph.py)
 - [Known field limitations](../legacy-field-guide.html)
 

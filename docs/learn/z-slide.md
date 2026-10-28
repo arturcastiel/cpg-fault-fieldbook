@@ -19,11 +19,12 @@ near and far corners of cell `c` along each axis. On fault pillar
 line `i`, slot `2i-1` belongs to the west column and slot `2i` to the
 east column, so the throw is `z[:, :, 2*i] - z[:, :, 2*i-1]`.
 
-> **Status.** No library call wraps the slide yet; the lessons write
-> out the corner-cube edit in numpy. A planned ZCORN module in
-> `cpg2unstructured` and a slide function in `fault_projections` will
-> replace these helpers. The lessons need `cpg2unstructured` 0.3.0,
-> whose `build_topology` pairs cells across a fault by depth overlap.
+> **Status.** These lessons write out the corner-cube edit in numpy to
+> show the mechanics. The library calls are `cpg2unstructured.zcorn_ops`
+> (ZCORN edits) and `fault_projections.slide_grid` (the slide), used by
+> lessons 23–29. The lessons need `cpg2unstructured` 0.4.0, whose
+> `build_topology` pairs cells across a fault by depth overlap and
+> handles faces where layer edges cross.
 
 ## Two faults, one after the other
 
@@ -86,11 +87,11 @@ the fault, applied to every corner east of the line.
 - **Contact areas:** the rebuilt areas match the analytic overlaps.
   For example, W k1 | E k0 goes 783 → 559 → 335 → 112 m² towards the
   tip.
-- **Current limit:** a 15 m taper passes the 10 m layer thickness
-  inside one cell face. The rebuilt fault polygon would need five
-  corners, so `build_topology` raises `NonMatchingZError`. Keep each
-  face's throw range clear of layer-thickness multiples until that
-  limit is lifted.
+- **Layer edges crossing inside a face:** a 15 m taper passes the
+  10 m layer thickness inside one cell face. Since cpg2unstructured
+  0.4.0, `build_topology` adds a node where the layer edges cross: 10
+  fault faces carry one, and the contacts still match the exact
+  trapezoid overlaps.
 
 {{ example:20_z_slide_partial_fault.py }}
 
