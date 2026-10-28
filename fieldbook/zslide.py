@@ -1,4 +1,4 @@
-"""Fault-slide helpers shared by lessons 23-29.
+"""Fault-slide helpers shared by lessons 23-30.
 
 The slide itself is :func:`fault_projections.slide_grid` (``slide_field`` and ``Throw`` here
 only keep the lessons' names). What stays in this module is lesson scaffolding and the

@@ -38,11 +38,12 @@ redraws them, with an interactive 3D HTML per lesson.
 > | `slide_field(grid, [Throw(...)], faults=...)` | one throw field per fault that ends inside the grid; one shift per welded group at each pillar |
 > | `Throw(faces, throw, hanging_side, profile, taper, decay, hanging, snap)` | peak throw or a throw-distance table; `snap` keeps layer boundaries from crossing inside a face |
 > | `unwelded_faces`, `analytic_contacts`, `process`, `crossed_faces`, `compare` | checks: which faces opened, the exact contacts on vertical pillars, the re-processed topology and its faces where layer edges cross |
-> | `layer_cake`, `blocks`, `interior`, `close_ring`, `named_chains` | synthetic grids, block labels, FAULTS cleanup after `adapt_grid` |
+> | `layer_cake`, `blocks`, `named_chains` | synthetic grids, block labels, FAULTS faces split into named chains |
 >
-> `interior` and `close_ring` guard against two gaps in
-> `adapt_grid(...).faults_after` that fault-projections 0.2.0 fixed; see
-> the [known limits](../reference/limits.md).
+> The lessons use `adapt_grid(...).faults_after` as it comes: since
+> fault-projections 0.2.0 it has no rim faces and closes rings. The old
+> guards `interior` and `close_ring` stay in `fieldbook.zslide` for older
+> versions; see the [known limits](../reference/limits.md).
 
 ## 1. Structural styles (lesson 23)
 
@@ -55,7 +56,7 @@ The blocks that FAULTS close are then slid rigidly.
 | A graben | two curved traces | middle block +25 m | rift basin |
 | B horst | the same faults | flanks +15 / +20 m | asymmetric horst |
 | C domino | three oblique traces | blocks step 12 m | tilted fault blocks |
-| D ring collapse | a closed elliptic trace (`close_ring`) | the inner block +30 m | caldera, salt withdrawal |
+| D ring collapse | a closed elliptic trace | the inner block +30 m | caldera, salt withdrawal |
 | E reverse fault | east pillars lean 40 m (66° dip) | hanging wall −20 m (up) | inversion, thrust |
 
 ![Structural styles](../assets/gallery/structural-styles.png)

@@ -38,7 +38,7 @@ from fault_projections import adapt_grid
 from fault_projections.from_faults import trace_faults
 
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              corner_cube, crossed_faces, interior, layer_cake, process,
+                              corner_cube, crossed_faces, layer_cake, process,
                               realized_throw, slide_blocks, slide_field, unwelded_faces,
                               write_deck)
 
@@ -57,7 +57,7 @@ def base_grid():
 
 def adapted(grid, trace, label):
     res = adapt_grid(grid, trace, **MORPH)
-    faces = interior(res.grid, res.faults_after)
+    faces = res.faults_after
     chain = trace_faults(res.grid, faces).chains[0]
     shift = np.linalg.norm(pillar_lattice(res.grid).top - pillar_lattice(grid).top, axis=-1)
     print(f"{label}: {len(faces)} FAULTS faces, {chain.length:.0f} m, pillar "

@@ -26,8 +26,8 @@ from cpg2unstructured import pillar_lattice
 from fault_projections import adapt_grid
 from fault_projections.from_faults import edge_face
 
-from fieldbook.zslide import (analytic_contacts, blocks, close_ring, column_of_point, compare,
-                              interior, layer_cake, named_chains, process, slide_blocks,
+from fieldbook.zslide import (analytic_contacts, blocks, column_of_point, compare,
+                              layer_cake, named_chains, process, slide_blocks,
                               unwelded_faces, write_deck)
 
 NX, NY, DX = 24, 16, 50.0
@@ -39,12 +39,10 @@ def base_grid():
     return layer_cake(NX, NY, len(DZ), DX, DZ, top=lambda x, y: 1000.0 + 0.02 * x)
 
 
-def adapted(grid, traces, ring=False):
+def adapted(grid, traces):
     """Adapt to the traces; return the grid and the FAULTS faces named per chain."""
     res = adapt_grid(grid, traces, **MORPH)
-    faces = interior(res.grid, res.faults_after)
-    if ring:
-        faces = close_ring(res.grid, faces)
+    faces = res.faults_after
     shift = np.linalg.norm(pillar_lattice(res.grid).top - pillar_lattice(grid).top, axis=-1)
     print(f"  adapted: {len(faces)} FAULTS faces, pillars moved up to {shift.max():.1f} m, "
           f"mean distance to the traces {res.distance_before.mean():.1f} -> "
@@ -105,7 +103,7 @@ def main(out):
     print("D: closed elliptic trace")
     th = np.linspace(0.0, 2.0 * np.pi, 25)
     ring = np.c_[600.0 + 230.0 * np.cos(th), 400.0 + 190.0 * np.sin(th)]
-    g4, faults = adapted(grid, ring, ring=True)
+    g4, faults = adapted(grid, ring)
     assert blocks(g4, faults["F1"]).max() == 1, "the ring must close one block"
     check("D_ring_collapse", g4, faults, {column_of_point(g4, (600.0, 400.0)): 30.0}, out)
 

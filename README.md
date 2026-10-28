@@ -59,8 +59,9 @@ results. Add `--out DIR` to keep the decks it writes.
 | 27 | `gallery_reservoir_applications` | **Gallery:** Allan diagram, fault seal, connectivity, wells |
 | 28 | `gallery_regridding` | **Gallery:** fault transfer, resolution, solver settings, ACTNUM, damage zone |
 | 29 | `gallery_export_workflows` | **Gallery:** simulator bundle, `adapt_deck`, VTK series, round trip |
+| 30 | `deck_slide_workflows` | **Decks:** `adapt_deck(slide=...)` in one call; slide Norne's FAULTS (`--deck`, `--throw`) |
 
-Lessons 23-29 share [`fieldbook/zslide.py`](fieldbook/zslide.py), which
+Lessons 23-30 share [`fieldbook/zslide.py`](fieldbook/zslide.py), which
 slides faults with `fault_projections.slide_grid` and adds the lessons'
 independent checks. The
 [Z-slide page](docs/learn/z-slide.md) and the

@@ -86,6 +86,13 @@ ACTNUM) and `<prefix>_report.txt`. `faults` defaults to the deck's own `FAULTS`
 `FAULTS` set does not change, so replace the grid in the deck with
 `INCLUDE '<prefix>_grid.grdecl' /`.
 
+Lesson 30 slides Norne's E_01 (5 m, fading to its tips) and BC (3 m, rigid)
+through a deck: 8 faces open, none outside `FAULTS`, a round trip returns to
+5e-13 m and cell volumes change by up to 2.4 % on the tilted pillars. To adapt
+and slide in one call, use [`adapt_deck(slide=...)`](adapt-grid.md#adapt_deck).
+
+{{ example:30_deck_slide_workflows.py }}
+
 ## `zcorn_ops` (cpg2unstructured)
 
 | Function | What it does |
@@ -108,7 +115,7 @@ ACTNUM) and `<prefix>_report.txt`. `faults` defaults to the deck's own `FAULTS`
 
 ## Source and tests
 
-- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/fault_projections/slide.py)
-  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/tests/test_slide.py)
+- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/slide.py)
+  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_slide.py)
 - [`zcorn_ops`](https://github.com/arturcastiel/cpg2python/blob/7d98aebbd64b03ee4623cf0c97e01dd19cda9f5b/cpg2unstructured/zcorn_ops.py)
-- Lessons 19–29 ([Z slide](../learn/z-slide.md), [gallery](../learn/gallery.md))
+- Lessons 19–30 ([Z slide](../learn/z-slide.md), [gallery](../learn/gallery.md))

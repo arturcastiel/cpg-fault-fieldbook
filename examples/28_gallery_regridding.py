@@ -40,7 +40,7 @@ from fault_projections.from_faults import fault_polyline, faults_from_deck, trac
 from scipy.ndimage import distance_transform_cdt
 
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              face_columns, interior, layer_cake, process, slide_blocks,
+                              face_columns, layer_cake, process, slide_blocks,
                               slide_field, unwelded_faces, write_deck)
 
 DZ = [15.0, 25.0, 20.0, 30.0]
@@ -71,12 +71,12 @@ def plan_length(grid, faces):
 
 def staircase(grid, trace):
     """FAULTS of a trace on an unadapted grid: the faces between the pillars it claims."""
-    return interior(grid, fault_faces_from_chain(targets_from_polyline(grid, trace)))
+    return fault_faces_from_chain(targets_from_polyline(grid, trace))
 
 
 def adapted(grid, trace, **morph):
     res = adapt_grid(grid, trace, **(morph or MORPH))
-    return res, interior(res.grid, res.faults_after)
+    return res, res.faults_after
 
 
 def active(grid):

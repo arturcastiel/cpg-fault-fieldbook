@@ -82,6 +82,8 @@ adapt_deck(
     prefix: str = "adapted",
     regenerate_faults: bool = True,
     fault_names=None,
+    slide=None,
+    slide_options=None,
     **morph_kw,
 ) -> AdaptResult
 ```
@@ -90,7 +92,17 @@ This file workflow is intended for GRDECL text decks and 2-D polyline traces.
 It reads `deck`, calls `adapt_grid`, creates `out_dir` if needed, and writes:
 
 - `<prefix>_grid.grdecl`, a grid include with the modified `COORD`;
-- `<prefix>_faults.grdecl` when 2-D fault regeneration is enabled.
+- `<prefix>_faults.grdecl` when 2-D fault regeneration is enabled;
+- `<prefix>_slide_report.txt` when `slide` is given.
+
+`slide` (a `Throw` or a list, naming the faults in `fault_names` or the
+mapping keys) slides the regenerated faults right after the morph, by ZCORN
+only, before anything is written: the grid include then holds the adapted and
+slid grid, `result.slide` the [`SlideResult`](fault-slide.md) and
+`result.slide.before` the adapted grid alone. `slide_options` go to
+`slide_grid`. It needs 2-D traces with `regenerate_faults=True`; a failed slide
+raises `SlideError` and writes nothing. Lesson 30 runs it and checks that it
+equals `adapt_deck` followed by `slide_grid`.
 
 The master deck is not rewritten. Add an appropriate Eclipse `INCLUDE` to the
 master deck to use the generated grid include; inspect `faults_path` and
@@ -142,10 +154,10 @@ evidence, not a claim of production readiness.
 
 ## Source and tests
 
-- [`adapt_grid`, `adapt_deck`, and `AdaptResult`](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/fault_projections/adapt.py)
-- [Adaptation tests](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/tests/test_adapt.py)
-- [2-D corridor example](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/examples/adapt_corridor.py)
-  · [Dipping-fault example](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/examples/adapt_dipping.py)
+- [`adapt_grid`, `adapt_deck`, and `AdaptResult`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/adapt.py)
+- [Adaptation tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_adapt.py)
+- [2-D corridor example](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/examples/adapt_corridor.py)
+  · [Dipping-fault example](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/examples/adapt_dipping.py)
 - [Morph solver](https://github.com/arturcastiel/cpg2python/blob/e4637ccedf82c82f5c081bb909b354a7b919c6be/cpg2unstructured/morph.py)
 - [Known field limitations](../legacy-field-guide.html)
 
