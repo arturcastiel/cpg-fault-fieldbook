@@ -40,9 +40,11 @@ when changing `upstream-lock.toml`.
 | `cpg2unstructured` | `ValidityExhaustedWarning` | yes | [morph-pillars](../functions/morph-pillars.md) |
 | `cpg2unstructured` | `ValidityReport` | yes | [topology-quality](../functions/topology-quality.md) |
 | `cpg2unstructured` | `WELD_TOLERANCE` | yes | Directory only |
+| `cpg2unstructured` | `ZcornValidity` | yes | [fault-slide](../functions/fault-slide.md) |
 | `cpg2unstructured` | `__version__` | yes | Directory only |
 | `cpg2unstructured` | `active_columns` | yes | Directory only |
 | `cpg2unstructured` | `apply_displacement` | yes | Directory only |
+| `cpg2unstructured` | `apply_zcorn_displacement` | yes | [fault-slide](../functions/fault-slide.md) |
 | `cpg2unstructured` | `aspect_ratio` | yes | Directory only |
 | `cpg2unstructured` | `attach_props` | yes | Directory only |
 | `cpg2unstructured` | `boundary_chain` | yes | Directory only |
@@ -58,12 +60,12 @@ when changing `upstream-lock.toml`.
 | `cpg2unstructured` | `cell_quality` | yes | [topology-quality](../functions/topology-quality.md) |
 | `cpg2unstructured` | `check_validity` | yes | [topology-quality](../functions/topology-quality.md) |
 | `cpg2unstructured` | `column_signed_areas` | yes | Directory only |
-| `cpg2unstructured` | `corner_folds` | **NO (broken export)** | Directory only |
+| `cpg2unstructured` | `corner_folds` | yes | Directory only |
 | `cpg2unstructured` | `corner_jacobians` | yes | Directory only |
 | `cpg2unstructured` | `csgraph_indices` | yes | Directory only |
-| `cpg2unstructured` | `depth_crossings` | **NO (broken export)** | Directory only |
+| `cpg2unstructured` | `depth_crossings` | yes | Directory only |
 | `cpg2unstructured` | `distortion_energy` | yes | Directory only |
-| `cpg2unstructured` | `elastic_stiffness` | **NO (broken export)** | Directory only |
+| `cpg2unstructured` | `elastic_stiffness` | yes | Directory only |
 | `cpg2unstructured` | `face_areas` | yes | Directory only |
 | `cpg2unstructured` | `face_centroids` | yes | Directory only |
 | `cpg2unstructured` | `face_edges` | yes | Directory only |
@@ -91,7 +93,7 @@ when changing `upstream-lock.toml`.
 | `cpg2unstructured` | `polish_lattice` | yes | Directory only |
 | `cpg2unstructured` | `project_to_plane` | yes | Directory only |
 | `cpg2unstructured` | `projected_topology` | yes | Directory only |
-| `cpg2unstructured` | `proximity_violations` | **NO (broken export)** | Directory only |
+| `cpg2unstructured` | `proximity_violations` | yes | Directory only |
 | `cpg2unstructured` | `read_egrid` | yes | [grid-input](../functions/grid-input.md) |
 | `cpg2unstructured` | `read_grdecl` | yes | [grid-input](../functions/grid-input.md) |
 | `cpg2unstructured` | `reduce_area` | yes | Directory only |
@@ -101,11 +103,16 @@ when changing `upstream-lock.toml`.
 | `cpg2unstructured` | `shortest_path` | yes | Directory only |
 | `cpg2unstructured` | `shortest_path_fast` | yes | Directory only |
 | `cpg2unstructured` | `skew` | yes | Directory only |
-| `cpg2unstructured` | `stiffness_from_quality` | **NO (broken export)** | Directory only |
-| `cpg2unstructured` | `support_mask` | **NO (broken export)** | Directory only |
+| `cpg2unstructured` | `stiffness_from_quality` | yes | Directory only |
+| `cpg2unstructured` | `support_mask` | yes | Directory only |
 | `cpg2unstructured` | `surface_boundary_loops` | yes | Directory only |
+| `cpg2unstructured` | `unwelded_faces` | yes | [fault-slide](../functions/fault-slide.md) |
+| `cpg2unstructured` | `with_zcorn` | yes | [fault-slide](../functions/fault-slide.md) |
 | `cpg2unstructured` | `write_grid_include` | yes | Directory only |
+| `cpg2unstructured` | `zcorn_cube` | yes | [fault-slide](../functions/fault-slide.md) |
+| `cpg2unstructured` | `zcorn_validity` | yes | [fault-slide](../functions/fault-slide.md) |
 | `fault_projections` | `AdaptResult` | yes | [adapt-grid](../functions/adapt-grid.md) |
+| `fault_projections` | `Connection` | yes | [fault-slide](../functions/fault-slide.md) |
 | `fault_projections` | `DegenerateQuadError` | yes | Directory only |
 | `fault_projections` | `DisconnectedMeshError` | yes | Directory only |
 | `fault_projections` | `FaultChain` | yes | Directory only |
@@ -123,6 +130,9 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `Polygon3D` | yes | Directory only |
 | `fault_projections` | `ProjectedGraph` | yes | Directory only |
 | `fault_projections` | `QuadMesh` | yes | [surface-projection](../functions/surface-projection.md) |
+| `fault_projections` | `SlideError` | yes | [fault-slide](../functions/fault-slide.md) |
+| `fault_projections` | `SlideResult` | yes | [fault-slide](../functions/fault-slide.md) |
+| `fault_projections` | `Throw` | yes | [fault-slide](../functions/fault-slide.md) |
 | `fault_projections` | `__version__` | yes | Directory only |
 | `fault_projections` | `adapt_deck` | yes | [adapt-grid](../functions/adapt-grid.md) |
 | `fault_projections` | `adapt_grid` | yes | [adapt-grid](../functions/adapt-grid.md) |
@@ -133,6 +143,7 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `edge_face` | yes | Directory only |
 | `fault_projections` | `face_edge` | yes | Directory only |
 | `fault_projections` | `facet_surface` | yes | Directory only |
+| `fault_projections` | `fault_blocks` | yes | Directory only |
 | `fault_projections` | `fault_faces_for` | yes | Directory only |
 | `fault_projections` | `fault_polyline` | yes | Directory only |
 | `fault_projections` | `fault_polylines` | yes | Directory only |
@@ -154,6 +165,8 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `read_faults_records` | yes | Directory only |
 | `fault_projections` | `read_shapefile` | yes | Directory only |
 | `fault_projections` | `segment_incidences` | yes | Directory only |
+| `fault_projections` | `slide_deck` | yes | [fault-slide](../functions/fault-slide.md) |
+| `fault_projections` | `slide_grid` | yes | [fault-slide](../functions/fault-slide.md) |
 | `fault_projections` | `stitch_path` | yes | Directory only |
 | `fault_projections` | `stitch_paths` | yes | Directory only |
 | `fault_projections` | `surface_to_fault_faces` | yes | Directory only |

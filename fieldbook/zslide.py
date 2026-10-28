@@ -1,12 +1,13 @@
-"""Prototype of the planned ZCORN-only fault slide, shared by lessons 23-29.
+"""Fault-slide helpers shared by lessons 23-29.
 
-This is teaching code, not a library call: the call itself is planned for fault-projections.
-The defaults follow the decisions recorded for it:
+The slide itself is :func:`fault_projections.slide_grid` (``slide_field`` and ``Throw`` here
+only keep the lessons' names). What stays in this module is lesson scaffolding and the
+independent checks the lessons use to verify the library:
 
-- far field ``"auto"``: a fault that closes a block slides it rigidly; a fault that ends
-  inside the grid tapers to zero at each tip and its motion decays away from it;
-- decay by a distance kernel by default, or by a Laplacian (harmonic) solve on the pillars;
-- the hanging wall takes the whole throw (``hanging=1.0``); a cosine profile toward each tip.
+- ``layer_cake`` and ``write_deck`` build and write synthetic cases;
+- ``blocks``, ``unwelded_faces``, ``realized_throw`` and ``analytic_contacts`` recompute
+  what a slide should give, without the library's code;
+- ``process`` re-processes a slid grid with cpg2unstructured and reads its contacts.
 
 Conventions: depths grow downward, so a positive throw moves the hanging wall down. Columns
 and pillars are indexed ``[i, j]`` (0-based), as in ``pillar_lattice``. A slide only adds a
@@ -25,13 +26,13 @@ from cpg2unstructured import (CornerPointGrid, build_topology, from_grdecl, pill
 from cpg2unstructured.geometry import cell_geometry, face_geometry
 from fault_projections.faults import FaultFace, faults_text
 from fault_projections.from_faults import edge_face, face_edge, trace_faults
-from scipy.sparse import coo_matrix
-from scipy.sparse.linalg import spsolve
+from fault_projections.slide import Throw as FpThrow
+from fault_projections.slide import slide_grid
 
 __all__ = [
     "layer_cake", "corner_cube", "with_cube", "faces_of", "face_columns",
     "blocks", "slide_blocks", "Throw", "slide_field", "unwelded_faces", "analytic_contacts",
-    "Processed", "process", "contacts_by_layer", "write_deck", "realized_throw",
+    "Processed", "process", "crossed_faces", "contacts_by_layer", "write_deck", "realized_throw",
     "column_of_point", "cosine", "compare", "interior", "close_ring", "named_chains",
 ]
 
@@ -119,8 +120,8 @@ def face_columns(f):
 def interior(grid, faces):
     """Drop faces that sit on the grid rim (one side has no cell).
 
-    `adapt_grid(...).faults_after` keeps a chain edge that runs along the rim, which
-    comes out as an invalid index such as ``J = 0``; FAULTS needs both cells.
+    Before fault-projections 0.2.0, `adapt_grid(...).faults_after` kept chain edges on the
+    rim (invalid indices such as ``J = 0``); FAULTS needs both cells. Kept as a guard.
     """
     nx, ny, _ = grid.cart_dims
     keep = []
@@ -134,9 +135,9 @@ def interior(grid, faces):
 def close_ring(grid, faces):
     """Add the face that closes a ring trace.
 
-    `adapt_grid(...).faults_after` reads faces between consecutive chain pillars and
-    leaves out the edge from the last pillar back to the first, so a closed trace comes
-    back one face short of a ring and cuts off no block.
+    Before fault-projections 0.2.0, `adapt_grid(...).faults_after` left out the edge from
+    the last chain pillar back to the first, so a closed trace came back one face short of
+    a ring and cut off no block. Kept as a guard.
     """
     faces = faces_of(faces)
     for chain in trace_faults(grid, faces).chains:
@@ -217,16 +218,13 @@ def cosine(u):
 
 @dataclass(frozen=True)
 class Throw:
-    """How one fault's throw is shaped; a prototype of the planned slide options.
+    """How one fault's throw is shaped, in the lessons' terms.
 
     ``faces`` must form one branch-free chain. ``throw`` is the peak throw (m, positive =
-    hanging wall down) or a table ``((s, t), ...)`` along the chain's arc length from its
-    first pillar, which must be 0 at every tip. ``hanging_side`` is a plan point on the
-    hanging wall. ``decay="auto"`` keeps the whole side moving when the fault has no tip,
-    and otherwise fades the motion to zero at half the fault length. ``snap`` moves the
-    throw at a fault pillar onto a layer boundary whenever the next face would otherwise
-    carry that boundary across its inside (a contact polygon with five corners, which
-    re-processing rejects); the crossing then happens exactly at a pillar.
+    hanging wall down) or a table ``((s, t), ...)`` along the chain's arc length, which must
+    be 0 at every tip. ``hanging_side`` is a plan point on the hanging wall. The other
+    fields are those of :class:`fault_projections.Throw`; ``snap`` defaults to ``True`` here
+    so that the lessons' layer boundaries cross exactly at pillars.
     """
 
     faces: tuple
@@ -239,42 +237,26 @@ class Throw:
     snap: bool = True
 
 
-class _Groups:
-    """Around each pillar, the columns that stay welded together: one node per group."""
+def slide_field(grid, specs, *, faults=None, method="kernel"):
+    """Slide faults with :func:`fault_projections.slide_grid`, editing ZCORN only.
 
-    def __init__(self, nx, ny, faults):
-        cut = _cut_pairs(faults)
-        self.nx, self.ny = nx, ny
-        self.node_of = {}               # (pillar, column) -> node id
-        self.pillar = []                # node id -> pillar (i, j)
-        self.columns = []               # node id -> columns in the group
-        for p in np.ndindex(nx + 1, ny + 1):
-            pi, pj = p
-            ring = [(pi - 1, pj - 1), (pi, pj - 1), (pi, pj), (pi - 1, pj)]
-            present = [c for c in ring if 0 <= c[0] < nx and 0 <= c[1] < ny]
-            parent = {c: c for c in present}
+    ``faults`` is the full FAULTS set (default: the faces of ``specs``). ``method`` is
+    ``"kernel"`` (distance fade) or ``"laplacian"`` (harmonic). The lessons run their own
+    checks on the result, so the library's gate and report are switched off here.
+    """
+    specs = [specs] if isinstance(specs, Throw) else list(specs)
+    lib = [FpThrow(list(s.faces), s.throw, hanging_side=tuple(s.hanging_side),
+                   hanging=s.hanging, profile=s.profile, taper=s.taper, decay=s.decay,
+                   snap=s.snap) for s in specs]
+    named = None
+    if faults is not None:
+        named = {k: faces_of(v) for k, v in faults.items()} if isinstance(faults, dict) \
+            else {"FAULTS": faces_of(faults)}
+    return slide_grid(grid, lib, faults=named, method=method, on_invalid="ignore",
+                      report=False).grid
 
-            def find(c):
-                while parent[c] != c:
-                    c = parent[c]
-                return c
-            for a, b in zip(ring, ring[1:] + ring[:1]):
-                if a in parent and b in parent and frozenset({a, b}) not in cut:
-                    parent[find(a)] = find(b)
-            roots = {}
-            for c in present:
-                roots.setdefault(find(c), []).append(c)
-            for cols in roots.values():
-                node = len(self.pillar)
-                self.pillar.append(p)
-                self.columns.append(cols)
-                for c in cols:
-                    self.node_of[(p, c)] = node
 
-    @staticmethod
-    def _ring(p):
-        pi, pj = p
-        return [(pi - 1, pj - 1), (pi, pj - 1), (pi, pj), (pi - 1, pj)]
+# ── independent checks (oracles for the library) ────────────────────────────────────────────
 
 
 def _project(xy, pts):
@@ -306,170 +288,9 @@ def _chain(grid, faces):
     return trace.chains[0]
 
 
-def _along(spec, s, s_tips, length):
-    """Relative throw at arc lengths ``s`` along the chain."""
-    s = np.asarray(s, float)
-    if not np.isscalar(spec.throw) and np.ndim(spec.throw) == 2:
-        table = np.asarray(spec.throw, float)
-        out = np.interp(s, table[:, 0], table[:, 1])
-        for tip in s_tips:
-            if abs(np.interp(tip, table[:, 0], table[:, 1])) > 1e-9:
-                raise ValueError("a throw table must be 0 at every tip")
-        return out
-    peak = float(spec.throw)
-    if not s_tips:
-        return np.full_like(s, peak)
-    rise = spec.taper or (length / len(s_tips))
-    u = np.min([np.abs(np.clip(s, 0.0, length) - t) for t in s_tips], axis=0) / rise
-    shape = np.clip(u, 0.0, 1.0) if spec.profile == "linear" else cosine(u)
-    return peak * shape
-
-
-def _fade(spec, d, has_tips, length):
-    decay = spec.decay
-    if decay == "auto":
-        decay = 0.5 * length if has_tips else None
-    if decay is None:
-        return np.ones_like(d), None
-    return 1.0 - cosine(d / decay), float(decay)
-
-
-def slide_field(grid, specs, *, faults=None, method="kernel"):
-    """Apply one throw field per ``Throw``, editing ZCORN only.
-
-    Every pillar carries one shift per group of columns that stay welded around it, so
-    every face outside ``faults`` stays welded and the throw is zero wherever a fault ends.
-    ``faults`` is the full FAULTS set (default: the faces of ``specs``); a field acts only on
-    the blocks its fault touches. ``method`` is ``"kernel"`` (distance fade) or
-    ``"laplacian"`` (harmonic between the fault and the decay distance, or the rim).
-    """
-    nx, ny, _ = grid.cart_dims
-    specs = [specs] if isinstance(specs, Throw) else list(specs)
-    allf = faces_of(faults) if faults is not None else faces_of([s.faces for s in specs])
-    groups = _Groups(nx, ny, allf)
-    label = blocks(grid, allf)
-    xy = pillar_lattice(grid).top                                  # (nx+1, ny+1, 2)
-    value = np.zeros(len(groups.pillar))
-    for spec in specs:
-        value += _field(grid, spec, groups, label, xy, method)
-    add = np.zeros((nx, ny, 2, 2))
-    for i, j in np.ndindex(nx, ny):
-        for u, v in np.ndindex(2, 2):
-            add[i, j, u, v] = value[groups.node_of[((i + u, j + v), (i, j))]]
-    _, _, nz = grid.cart_dims
-    cube = corner_cube(grid)
-    per_slot = add.transpose(1, 3, 0, 2).reshape(2 * ny, 2 * nx)   # [j-slot, i-slot]
-    return with_cube(grid, cube + per_slot[None])
-
-
-def _field(grid, spec, groups, label, xy, method):
-    chain = _chain(grid, spec.faces)
-    cxy = chain.xy
-    length = chain.length
-    cum = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(cxy, axis=0), axis=1))])
-    # A chain end is a tip when one welded group surrounds its pillar.
-    ends = [(0, tuple(chain.ij[0])), (-1, tuple(chain.ij[-1]))]
-    n_groups = lambda p: len({groups.node_of[(p, c)] for c in _Groups._ring(p)  # noqa: E731
-                              if (p, c) in groups.node_of})
-    s_tips = [0.0 if e == 0 else length for e, p in ends if n_groups(p) == 1]
-    _, _, hw = _project(cxy, [spec.hanging_side])
-    if hw[0] == 0:
-        raise ValueError("hanging_side lies on the fault")
-    touched = {label[c] for f in spec.faces for c in face_columns(f)
-               if 0 <= c[0] < label.shape[0] and 0 <= c[1] < label.shape[1]}
-    on_chain = {tuple(p): m for m, p in enumerate(chain.ij)}
-    nodes = range(len(groups.pillar))
-    d = np.zeros(len(groups.pillar))
-    s = np.zeros(len(groups.pillar))
-    side = np.zeros(len(groups.pillar))
-    inside = np.zeros(len(groups.pillar), bool)
-    for n in nodes:
-        p, cols = groups.pillar[n], groups.columns[n]
-        inside[n] = label[cols[0]] in touched
-        if p in on_chain:
-            m = on_chain[p]
-            s[n] = cum[m]
-            side[n] = _chain_side(chain, m, cols)
-        else:
-            d[n], s[n], side[n] = _project(cxy, [xy[p]])
-    throw = _along(spec, s, s_tips, length)
-    if spec.snap:
-        order = [n for m in range(len(chain.ij)) for n in nodes
-                 if groups.pillar[n] == tuple(chain.ij[m])]
-        snapped = _snap(grid, chain, np.array([_along(spec, [cum[m]], s_tips, length)[0]
-                                               for m in range(len(chain.ij))]), hw[0])
-        for n in order:
-            throw[n] = snapped[on_chain[groups.pillar[n]]]
-    share = np.where(side == hw[0], spec.hanging, spec.hanging - 1.0)
-    share[side == 0] = 0.0
-    fade, decay = _fade(spec, d, bool(s_tips), length)
-    if method == "kernel":
-        return np.where(inside, share * throw * fade, 0.0)
-    if method != "laplacian":
-        raise ValueError(f"unknown method {method!r}")
-    chain_node = np.array([groups.pillar[n] in on_chain for n in nodes])
-    fixed = chain_node | ~inside
-    if decay is not None:
-        fixed |= d >= decay
-    target = np.where(chain_node & inside, share * throw, 0.0)
-    rows, cols_ = [], []
-    for i, j in np.ndindex(groups.nx, groups.ny):
-        corners = [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)]
-        ids = [groups.node_of[(p, (i, j))] for p in corners]
-        for a, b in zip(ids, ids[1:] + ids[:1]):
-            rows += [a, b]
-            cols_ += [b, a]
-    n = len(groups.pillar)
-    w = coo_matrix((np.ones(len(rows)), (rows, cols_)), shape=(n, n)).tocsr()
-    lap = (coo_matrix((np.asarray(w.sum(1)).ravel(), (range(n), range(n))), shape=(n, n))
-           - w).tocsr()
-    free = ~fixed
-    out = target.copy()
-    if free.any():
-        rhs = -lap[free][:, fixed] @ target[fixed]
-        out[free] = spsolve(lap[free][:, free].tocsc(), rhs)
-    return out
-
-
-def _snap(grid, chain, throw, hw):
-    """Lower the throw at fault pillars until no face carries a layer boundary across.
-
-    The horizons are read on each side of every fault pillar, so throw already on the
-    fault (an earlier slide) counts: a hanging-wall horizon ``a`` meets a footwall horizon
-    ``b`` when the added relative throw equals ``F_b - H_a``.
-    """
-    cube = corner_cube(grid)
-    nx, ny, nz = grid.cart_dims
-
-    def horizons(p, c):
-        col = cube[:, 2 * c[1] + p[1] - c[1], 2 * c[0] + p[0] - c[0]]
-        return np.append(col[0::2], col[-1])
-    crit = []
-    for m, p in enumerate(map(tuple, chain.ij)):
-        sides = {}
-        for c in _Groups._ring(p):
-            if 0 <= c[0] < nx and 0 <= c[1] < ny:
-                sides.setdefault(_chain_side(chain, m, [c]), c)
-        hang, foot = sides.get(hw), sides.get(-hw)
-        hang = hang if hang is not None else foot
-        foot = foot if foot is not None else hang
-        crit.append(np.subtract.outer(horizons(p, foot), horizons(p, hang)).ravel())
-    out = throw.copy()
-    tol = 1e-9 * max(1.0, float(np.abs(cube).max()))       # horizons meeting exactly stay put
-    changed, passes = True, 0
-    while changed:
-        changed, passes = False, passes + 1
-        if passes > 10 * len(out) * len(crit[0]):
-            raise RuntimeError("snap did not settle; lower the throw")
-        for m in range(1, len(out)):
-            a, b = out[m - 1] - crit[m - 1], out[m] - crit[m]
-            crossed = np.flatnonzero(((a < -tol) & (b > tol)) | ((a > tol) & (b < -tol)))
-            if crossed.size:
-                big, small = (m, m - 1) if abs(out[m]) >= abs(out[m - 1]) else (m - 1, m)
-                options = crit[big][crossed]
-                out[big] = options[np.argmin(np.abs(options - out[small]))]
-                changed = True
-    return out
+def _ring(p):
+    pi, pj = p
+    return [(pi - 1, pj - 1), (pi, pj - 1), (pi, pj), (pi - 1, pj)]
 
 
 def _chain_side(chain, m, cols):
@@ -609,6 +430,13 @@ def process(grid_or_path):
     return Processed(topology, fg.areas, fg.centroids, volumes, topology.original_ijk)
 
 
+def crossed_faces(topology) -> int:
+    """Lateral faces with an intersection node: a layer boundary crosses inside them."""
+    corners = topology.n_corner_nodes
+    lateral = topology.faces.direction < 2
+    return 0 if corners is None else int((topology.faces.nodes[lateral] >= corners).any(1).sum())
+
+
 def contacts_by_layer(contacts, flip=()):
     """Sum contacts into ``{(k first side, k second side): area}``.
 
@@ -672,7 +500,7 @@ def realized_throw(before, after, faces, hanging_side):
     out = []
     for m, p in enumerate(map(tuple, chain.ij)):
         down = {1.0: [], -1.0: []}
-        for c in _Groups._ring(p):
+        for c in _ring(p):
             if not (0 <= c[0] < nx and 0 <= c[1] < ny):
                 continue
             sd = _chain_side(chain, m, [c])

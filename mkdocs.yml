@@ -25,6 +25,7 @@ nav:
       - Targets and corridors: functions/targets-corridors.md
       - Adaptation: functions/adapt-grid.md
       - Surface projection: functions/surface-projection.md
+      - Fault slide: functions/fault-slide.md
   - Decisions: decisions/settings.md
   - Cases:
       - Passing interior trace: cases/one-trace.md

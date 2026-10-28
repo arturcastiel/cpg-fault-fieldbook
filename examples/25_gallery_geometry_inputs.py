@@ -17,7 +17,8 @@ onto the fault, and then slides a block by editing ZCORN only:
 - E dome with a crestal graben: two traces over the crest of a dome; the graben drops 20 m and
   the crest moves to the footwall shoulders (an exploration trap that the fault splits);
 - F dipping layers: a partial normal fault in layers dipping 8.5 degrees (7.5 m per column);
-  a throw field that dies out at both tips, with the snap that keeps the deck processable.
+  a throw field that dies out at both tips. Unsnapped, horizons cross inside fault faces and
+  the faces are cut at intersection nodes; the snap keeps layer boundaries on the pillars.
 
 Each case asserts that COORD stays put and exactly the FAULTS faces open, plus what the input
 kind lets us check: lengths and contact areas, plane fit and distance, volumes, coverage of the
@@ -31,8 +32,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
-from cpg2unstructured import (NonMatchingZError, build_topology, cell_quality, fit_plane,
-                              from_grdecl, pillar_lattice, surface_boundary_loops)
+from cpg2unstructured import (build_topology, cell_quality, fit_plane, from_grdecl,
+                              pillar_lattice, surface_boundary_loops)
 from fault_projections import (QuadMesh, adapt_grid, facet_surface, faults_text_3d,
                                project_faceted_surface, project_quad_mesh_surface,
                                surface_to_fault_faces, validate_quad_mesh)
@@ -41,9 +42,9 @@ from fault_projections.faceting import sample_cloud_grid
 from fault_projections.from_faults import face_edge, trace_faults
 
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              corner_cube, face_columns, faces_of, interior, layer_cake,
-                              named_chains, process, realized_throw, slide_blocks, slide_field,
-                              unwelded_faces, with_cube, write_deck)
+                              corner_cube, crossed_faces, face_columns, faces_of, interior,
+                              layer_cake, named_chains, process, realized_throw, slide_blocks,
+                              slide_field, unwelded_faces, with_cube, write_deck)
 
 NX, NY, DX = 24, 16, 50.0
 DZ = [15.0, 25.0, 20.0, 30.0]
@@ -342,11 +343,9 @@ def case_f(out):
     hanging, peak = (800.0, 300.0), 25.0
     raw = slide_field(g, Throw(faces=tuple(faces), throw=peak, hanging_side=hanging, snap=False),
                       faults=faces)
-    try:
-        process(raw)
-        raise AssertionError("an unsnapped field should leave a horizon inside a fault face")
-    except NonMatchingZError:
-        pass
+    raw_total = vertical_checks(g, raw, faces)   # horizons cross inside faces: still exact
+    crossed = crossed_faces(process(raw).topology)
+    assert crossed > 0, "an unsnapped field should leave a horizon inside a fault face"
     spec = Throw(faces=tuple(faces), throw=peak, hanging_side=hanging)
     slid = run("F_dipping_layers", g, {"F1": faces}, spec, out)
     total = vertical_checks(g, slid, faces)
@@ -358,7 +357,8 @@ def case_f(out):
     np.savetxt(out / "F_realized_throw.csv", throw, delimiter=",", header="s,throw",
                comments="", fmt="%.3f")
     print(f"  {len(faces)} faces, {plan_length(g, faces):.0f} m, horizons re-draped (up to "
-          f"{fix:.2f} m); unsnapped field: NonMatchingZError; snapped: {snapped} pillars lowered")
+          f"{fix:.2f} m); unsnapped: {crossed} faces cut at a horizon crossing, contact "
+          f"{raw_total:,.0f} m2; snapped: {snapped} pillars lowered")
     print(f"  realized throw (m): {' '.join(f'{v:.0f}' for v in throw[:, 1])}; "
           f"contact {total:,.0f} m2")
 

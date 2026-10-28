@@ -24,6 +24,11 @@ PAGES = {
         "project_fault_surface", "project_quad_mesh_surface",
         "FaultSurface", "QuadMesh",
     },
+    "fault-slide.md": {
+        "slide_grid", "slide_deck", "Throw", "SlideResult", "SlideError", "Connection",
+        "zcorn_cube", "with_zcorn", "apply_zcorn_displacement", "unwelded_faces",
+        "zcorn_validity", "ZcornValidity",
+    },
 }
 
 

@@ -22,9 +22,10 @@ synthetic: nothing here checks simulator acceptance or flow.
 `python tools/figures/make_figures.py --only 10 11 12 13 14 15 16`
 redraws them, with an interactive 3D HTML per lesson.
 
-> **The slide helper.** The lessons share `fieldbook/zslide.py`, a
-> prototype of the planned slide call. It follows the defaults chosen
-> for the library: the far field is `"auto"`, so a fault that closes a
+> **The slide helper.** The lessons share `fieldbook/zslide.py`. Its
+> `slide_field` calls `fault_projections.slide_grid`; the rest builds
+> the cases and checks the library independently. The library's
+> defaults apply: the far field is `"auto"`, so a fault that closes a
 > block slides it rigidly, while a fault that ends inside the grid
 > tapers to zero at each tip and its motion decays away from it. The
 > decay is a distance kernel by default or a Laplacian solve on the
@@ -36,11 +37,12 @@ redraws them, with an interactive 3D HTML per lesson.
 > | `slide_blocks(grid, faults, {seed: throw})` | moves whole blocks closed by FAULTS; a throw is one value or one per horizon |
 > | `slide_field(grid, [Throw(...)], faults=...)` | one throw field per fault that ends inside the grid; one shift per welded group at each pillar |
 > | `Throw(faces, throw, hanging_side, profile, taper, decay, hanging, snap)` | peak throw or a throw-distance table; `snap` keeps layer boundaries from crossing inside a face |
-> | `unwelded_faces`, `analytic_contacts`, `process`, `compare` | checks: which faces opened, the exact contacts on vertical pillars, the re-processed topology |
+> | `unwelded_faces`, `analytic_contacts`, `process`, `crossed_faces`, `compare` | checks: which faces opened, the exact contacts on vertical pillars, the re-processed topology and its faces where layer edges cross |
 > | `layer_cake`, `blocks`, `interior`, `close_ring`, `named_chains` | synthetic grids, block labels, FAULTS cleanup after `adapt_grid` |
 >
-> `interior` and `close_ring` work around two upstream gaps in
-> `adapt_grid(...).faults_after`; see the [known limits](../reference/limits.md).
+> `interior` and `close_ring` guard against two gaps in
+> `adapt_grid(...).faults_after` that fault-projections 0.2.0 fixed; see
+> the [known limits](../reference/limits.md).
 
 ## 1. Structural styles (lesson 23)
 
