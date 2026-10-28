@@ -37,7 +37,7 @@ from fault_projections.adapt import fault_faces_from_chain
 from fault_projections.from_faults import faults_from_deck, trace_faults
 
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              corner_cube, faces_of, interior, layer_cake, process,
+                              corner_cube, faces_of, layer_cake, process,
                               realized_throw, slide_blocks, slide_field, unwelded_faces,
                               write_deck)
 
@@ -54,11 +54,11 @@ def adapted(grid, traces):
     """Adapt to all traces at once; return the grid and the FAULTS faces of each trace."""
     res = adapt_grid(grid, list(traces.values()), **MORPH)
     # faults_after is read off all chains joined end to end; each trace's own chain names it.
-    faults = {name: interior(res.grid, fault_faces_from_chain(targets_from_polylines(grid, [t])))
+    faults = {name: fault_faces_from_chain(targets_from_polylines(grid, [t]))
               for name, t in traces.items()}
     faces = faces_of(faults)
     assert len(set(faces)) == len(faces), "two traces share a face"
-    assert set(faces) == set(interior(res.grid, res.faults_after))
+    assert set(faces) == set(res.faults_after)
     assert all(trace_faults(res.grid, f).is_simple for f in faults.values())
     shift = np.linalg.norm(pillar_lattice(res.grid).top - pillar_lattice(grid).top, axis=-1)
     print(f"  adapted: {len(faces)} FAULTS faces on {len(faults)} traces, pillars moved up to "

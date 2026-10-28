@@ -43,7 +43,7 @@ from fault_projections.vtk import write_grid_vtk, write_surface_vtk
 
 from fieldbook.cli import upstream_revisions
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              face_columns, interior, layer_cake, named_chains, process,
+                              face_columns, layer_cake, named_chains, process,
                               realized_throw, slide_blocks, slide_field, unwelded_faces,
                               write_deck)
 
@@ -61,7 +61,7 @@ def base_grid(top=lambda x, y: 1000.0 + 0.02 * x):
 
 def adapted(grid, traces):
     res = adapt_grid(grid, traces, **MORPH)
-    return res.grid, named_chains(res.grid, interior(res.grid, res.faults_after))
+    return res.grid, named_chains(res.grid, res.faults_after)
 
 
 def props_text():
@@ -212,7 +212,7 @@ def case_b(out, rings=3):
     work.mkdir(exist_ok=True)
     raw = base_grid()
     trace = np.array([[430.0, 0.0], [520.0, 300.0], [560.0, 560.0], [540.0, 800.0]])
-    stair = interior(raw, fault_faces_for(raw, trace))
+    stair = fault_faces_for(raw, trace)
     deck = write_deck(work / "raw.grdecl", raw, {"F1": stair}, header=f"{name}: staircase FAULTS")
     res = adapt_deck(deck, trace, work, prefix="adapted", fault_names=["F1"],
                      support_rings=rings, **MORPH)
@@ -220,8 +220,8 @@ def case_b(out, rings=3):
     includes = (res.grid_path.name, res.faults_path.name)
     (work / "case.grdecl").write_text("".join(f"INCLUDE\n  '{p}' /\n" for p in includes))
     grid = read_grdecl(work / "case.grdecl")
-    faces = interior(grid, faults_from_deck(res.faults_path)["F1"])
-    assert faces == interior(res.grid, res.faults_after)
+    faces = faults_from_deck(res.faults_path)["F1"]
+    assert faces == res.faults_after
     assert np.array_equal(grid.coord, res.grid.coord) and np.array_equal(grid.zcorn, raw.zcorn)
 
     # COORD diff of the adaptation: only pillars in the morph band around the trace moved.

@@ -157,11 +157,11 @@ fault-surface topology.
 
 ## Source and tests
 
-- [`targets_from_polyline` / `targets_from_polylines`](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/fault_projections/targets.py)
-- [Polyline input normalization](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/fault_projections/polylines.py)
-- [Target tests](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/tests/test_targets.py)
-- [`cell_corridor`](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/fault_projections/corridor.py)
-  · [Corridor tests](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/tests/test_corridor.py)
-- [Adaptation example](https://github.com/arturcastiel/fault-projections/blob/353b0493766704419af1d3e4bd309f70da4a2a14/examples/adapt_corridor.py)
+- [`targets_from_polyline` / `targets_from_polylines`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/targets.py)
+- [Polyline input normalization](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/polylines.py)
+- [Target tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_targets.py)
+- [`cell_corridor`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/corridor.py)
+  · [Corridor tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_corridor.py)
+- [Adaptation example](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/examples/adapt_corridor.py)
 - [Fieldbook limitations and recommendations](../legacy-field-guide.html)
 

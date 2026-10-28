@@ -42,8 +42,7 @@ from fault_projections.faceting import sample_cloud_grid
 from fault_projections.from_faults import face_edge, trace_faults
 
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              corner_cube, crossed_faces, face_columns, faces_of, interior,
-                              layer_cake, named_chains, process, realized_throw, slide_blocks,
+                              corner_cube, crossed_faces, face_columns, faces_of, layer_cake, named_chains, process, realized_throw, slide_blocks,
                               slide_field, unwelded_faces, with_cube, write_deck)
 
 NX, NY, DX = 24, 16, 50.0
@@ -101,7 +100,7 @@ def pillar_ends(grid, ij):
 def two_stage(grid, trace, surface):
     """Stage 1 snaps a pillar chain to the top trace (and gives the FAULTS), stage 2 tilts it."""
     r1 = adapt_grid(grid, trace, **MORPH)
-    faces = interior(r1.grid, r1.faults_after)
+    faces = r1.faults_after
     r2 = adapt_grid(r1.grid, surface, taper_cells=0.0, **MORPH)
     return r1.grid, r2.grid, faces, trace_faults(r1.grid, faces).chains[0].ij
 
@@ -140,7 +139,7 @@ def case_a(out):
     arc = np.c_[cx - r * np.cos(th), cy + r * np.sin(th)]
     true = 2.0 * r * np.arcsin(400.0 / r)                 # arc length between y = 0 and 800 m
     np.savetxt(out / "A_arc_trace.csv", arc, delimiter=",", header="x,y", comments="")
-    stair = interior(grid, fault_faces_for(grid, arc))
+    stair = fault_faces_for(grid, arc)
     label = blocks(grid, stair)
     cut = [f for f in stair if label[face_columns(f)[0]] != label[face_columns(f)[1]]]
     print(f"  staircase: {len(stair)} faces, {len(stair) - len(cut)} dead-end spur dropped "
@@ -148,7 +147,7 @@ def case_a(out):
     res = adapt_grid(grid, arc, **MORPH)
     t, lengths = 15.0, {}
     for name, g, faces in (("A_arc_staircase", grid, cut),
-                           ("A_arc_trace", res.grid, interior(res.grid, res.faults_after))):
+                           ("A_arc_trace", res.grid, res.faults_after)):
         slid = run(name, g, {"ARC": faces}, {column_of_point(g, (cx, cy)): t}, out)
         total = vertical_checks(g, slid, faces)
         lengths[name] = length = plan_length(g, faces)
@@ -315,7 +314,7 @@ def case_e(out):
     east = np.array([[700.0, -10.0], [710.0, 400.0], [750.0, 810.0]])
     res = adapt_grid(cake(dome), [west, east], **MORPH)
     g, fix = drape(res.grid, dome)
-    faults = named_chains(g, interior(g, res.faults_after))
+    faults = named_chains(g, res.faults_after)
     faces = faces_of(faults)
     seed, t = column_of_point(g, (600.0, 400.0)), 20.0
     slid = run("E_dome_graben", g, faults, {seed: t}, out)
@@ -339,7 +338,7 @@ def case_f(out):
     trace = np.array([[330.0, 180.0], [600.0, 420.0], [880.0, 610.0]])
     res = adapt_grid(cake(tilt), trace, **MORPH)
     g, fix = drape(res.grid, tilt)
-    faces = interior(g, res.faults_after)
+    faces = res.faults_after
     hanging, peak = (800.0, 300.0), 25.0
     raw = slide_field(g, Throw(faces=tuple(faces), throw=peak, hanging_side=hanging, snap=False),
                       faults=faces)

@@ -43,7 +43,7 @@ from fault_projections import adapt_grid
 from fault_projections.from_faults import face_edge, faults_from_deck, trace_faults
 
 from fieldbook.zslide import (Throw, analytic_contacts, blocks, column_of_point, compare,
-                              contacts_by_layer, corner_cube, face_columns, interior, layer_cake,
+                              contacts_by_layer, corner_cube, face_columns, layer_cake,
                               named_chains, process, slide_blocks, slide_field, unwelded_faces,
                               write_deck)
 
@@ -66,7 +66,7 @@ def base_grid():
 
 def adapted(grid, trace):
     res = adapt_grid(grid, trace, **MORPH)
-    faces = interior(res.grid, res.faults_after)
+    faces = res.faults_after
     print(f"  adapted: {len(faces)} FAULTS faces, mean distance to the trace "
           f"{res.distance_before.mean():.1f} -> {res.distance_after.mean():.1f} m")
     return res.grid, faces

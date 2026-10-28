@@ -16,7 +16,7 @@
   validate a simulator deck, transmissibility or flow.
 - **Z slide (lessons 19–22):** these lessons edit ZCORN directly to show
   the mechanics; the library call is `fault_projections.slide_grid`
-  (lessons 23–29).
+  (lessons 23–30).
   - A rigid slide needs FAULTS that close a block. A fault ending
     inside the grid needs a throw that tapers to zero at its tip.
     Lesson 22 shapes that taper with a profile, a decay distance and
@@ -59,8 +59,9 @@
   under `boundary="pinned"` (now `slide_rim_ends=True`), rim faces from
   steep traces, `%.6g` VTK points and the missing `.vtu`/`.pvd`
   writers, INCLUDE in `faults_from_deck`, and `adapt_deck` merging
-  every fault into one group. Some lessons keep their old guards
-  (`interior`, `close_ring`, `named_chains`, `taper_cells=0`).
+  every fault into one group. The lessons no longer call the old
+  guards `interior` and `close_ring`; `named_chains` and `taper_cells=0`
+  remain where a lesson needs them.
 - **Still open upstream:**
   - Stage 2 alone gives no connected chain: run stage 1 with the top
     trace first.

@@ -22,7 +22,7 @@ east column, so the throw is `z[:, :, 2*i] - z[:, :, 2*i-1]`.
 > **Status.** These lessons write out the corner-cube edit in numpy to
 > show the mechanics. The library calls are `cpg2unstructured.zcorn_ops`
 > (ZCORN edits) and `fault_projections.slide_grid` (the slide), used by
-> lessons 23–29. The lessons need `cpg2unstructured` 0.4.0, whose
+> lessons 23–30. The lessons need `cpg2unstructured` 0.4.0, whose
 > `build_topology` pairs cells across a fault by depth overlap and
 > handles faces where layer edges cross.
 
