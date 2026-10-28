@@ -99,10 +99,9 @@ def pillar_ends(grid, ij):
 
 def two_stage(grid, trace, surface):
     """Stage 1 snaps a pillar chain to the top trace (and gives the FAULTS), stage 2 tilts it."""
-    r1 = adapt_grid(grid, trace, **MORPH)
-    faces = r1.faults_after
-    r2 = adapt_grid(r1.grid, surface, taper_cells=0.0, **MORPH)
-    return r1.grid, r2.grid, faces, trace_faults(r1.grid, faces).chains[0].ij
+    r = adapt_grid(grid, surface, top_trace=trace, taper_cells=0.0, **MORPH)
+    faces = r.faults_after
+    return r.stage1.grid, r.grid, faces, trace_faults(r.stage1.grid, faces).chains[0].ij
 
 
 def sj_min(grid):

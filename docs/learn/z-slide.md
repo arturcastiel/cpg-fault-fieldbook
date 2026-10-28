@@ -127,7 +127,9 @@ The lesson runs the same slide on two decks with identical FAULTS:
   807.9 m² per metre of depth.
 
 A stage-2 dipping polygon is not used here because `boundary="pinned"`
-keeps the rim pillars vertical, and this fault ends on the rim.
+keeps the rim pillars vertical, and this fault ends on the rim. With
+`boundary="slide"` and `top_trace="auto"`, lesson 30 C adapts and slides
+a rim-to-rim 65° polygon in one call.
 
 ![Oblique dipping fault, regular and adapted grids](../assets/z-slide/oblique-fault.png)
 

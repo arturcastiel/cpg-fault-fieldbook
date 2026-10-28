@@ -16,6 +16,8 @@ adapt_grid(
     *,
     regenerate_faults: bool = True,
     taper_cells: float = 3.0,
+    slide_rim_ends: bool = False,
+    top_trace=None,
     **morph_kw,
 ) -> AdaptResult
 ```
@@ -27,6 +29,15 @@ Accepted `fault` forms are dispatched by geometry:
 | `(N,2)` XY vertices, or a list of `(Ni,2)` lines | Plan-view polyline(s) | Rigid pillar translation from `targets_from_polylines` |
 | `(N,3)` vertices or `Polygon3D` | Closed planar dipping polygon | Independent top/bottom targets from `targets_from_polygon` |
 | List of `(4,3)` planar quads | Curved, faceted surface | Targets from individual facets |
+
+A polygon or facets alone claim the pillars near the fault as a staircase
+band, not an edge-connected chain, so they give no FAULTS. Pass
+`top_trace=` to run both stages in one call. Give either the fault's `(N,2)`
+trace on the top surface, or `"auto"` to derive it with
+`surface_top_trace(grid, surface)`. Stage 1 snaps a pillar chain to the trace
+and reads the FAULTS off it; stage 2 then tilts the pillars into the fault.
+`result.stage1` is the trace stage alone, and `result.top_trace` the trace
+used. Lesson 25 B–D and lesson 30 C use it.
 
 `morph_kw` is forwarded to `morph_pillars` (for example, `boundary`,
 `smoothness`, `support_rings`, and validity options). `taper_cells` applies to
@@ -40,7 +51,10 @@ workflow.
 `distance_before` and `distance_after` are target residual arrays.
 For 2-D traces with fault regeneration enabled, `faults_before` and
 `faults_after` carry Eclipse face records and `faces_invariant` reports whether
-their face sets agree. `grid_path` and `faults_path` are unset for in-memory
+their face sets agree. Only faces with active cells on both sides are
+compared (`live_faces`). A trace through an inactive region therefore does not
+count as a change: there, re-projection walks round the hole while the chain
+runs through it. `grid_path` and `faults_path` are unset for in-memory
 adaptation.
 
 `ok` forwards the morph validity result. `summary()` reports distance changes,
@@ -84,11 +98,15 @@ adapt_deck(
     fault_names=None,
     slide=None,
     slide_options=None,
+    top_trace=None,
     **morph_kw,
 ) -> AdaptResult
 ```
 
-This file workflow is intended for GRDECL text decks and 2-D polyline traces.
+This file workflow is intended for GRDECL text decks. `polylines` takes 2-D
+polyline traces, or one dipping fault (a polygon or facets) with `top_trace=`
+(see above). The dipping fault's FAULTS are then named by `fault_names`
+(default `FAULT_1`).
 It reads `deck`, calls `adapt_grid`, creates `out_dir` if needed, and writes:
 
 - `<prefix>_grid.grdecl`, a grid include with the modified `COORD`;
@@ -100,9 +118,13 @@ mapping keys) slides the regenerated faults right after the morph, by ZCORN
 only, before anything is written: the grid include then holds the adapted and
 slid grid, `result.slide` the [`SlideResult`](fault-slide.md) and
 `result.slide.before` the adapted grid alone. `slide_options` go to
-`slide_grid`. It needs 2-D traces with `regenerate_faults=True`; a failed slide
-raises `SlideError` and writes nothing. Lesson 30 runs it and checks that it
-equals `adapt_deck` followed by `slide_grid`.
+`slide_grid`. It needs regenerated faults (2-D traces, or a surface with
+`top_trace=`) and `regenerate_faults=True`; a failed slide raises
+`SlideError` and writes nothing. Lesson 30 runs it and checks that it equals
+`adapt_deck` followed by `slide_grid`. Its case C slides a 65° polygon in one
+call, `adapt_deck(deck, polygon, out, top_trace="auto", fault_names="DIP",
+slide=Throw("DIP", 15.0))`: the hanging wall loses within 1.2 % of the wedge
+volume.
 
 The master deck is not rewritten. Add an appropriate Eclipse `INCLUDE` to the
 master deck to use the generated grid include; inspect `faults_path` and
@@ -154,10 +176,10 @@ evidence, not a claim of production readiness.
 
 ## Source and tests
 
-- [`adapt_grid`, `adapt_deck`, and `AdaptResult`](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/fault_projections/adapt.py)
-- [Adaptation tests](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/tests/test_adapt.py)
-- [2-D corridor example](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/examples/adapt_corridor.py)
-  · [Dipping-fault example](https://github.com/arturcastiel/fault-projections/blob/7222fc49020a9817500a257b3a8cb9358b16cbc7/examples/adapt_dipping.py)
+- [`adapt_grid`, `adapt_deck`, and `AdaptResult`](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/fault_projections/adapt.py)
+- [Adaptation tests](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/tests/test_adapt.py)
+- [2-D corridor example](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/examples/adapt_corridor.py)
+  · [Dipping-fault example](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/examples/adapt_dipping.py)
 - [Morph solver](https://github.com/arturcastiel/cpg2python/blob/e4637ccedf82c82f5c081bb909b354a7b919c6be/cpg2unstructured/morph.py)
 - [Known field limitations](../legacy-field-guide.html)
 

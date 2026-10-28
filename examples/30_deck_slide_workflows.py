@@ -9,19 +9,27 @@
 - B slide_deck on a field deck: a deck's FAULTS are read through INCLUDE and given a throw by
   name; only ZCORN is written. With no --deck, Norne is used when it is on this machine
   (env CPG_NORNE_GRDECL, the IRAP_1005.GRDECL grid; ACTNUM_0704.prop beside it and
-  ../FAULT/FAULT_JUN_05.INC) with E_01 5 m and BC 3 m; otherwise case B is skipped.
+  ../FAULT/FAULT_JUN_05.INC) with E_01 5 m and BC 3 m; otherwise case B is skipped;
+- C a dipping fault in one call: a 65 degree planar polygon on a deck with no FAULTS.
+  adapt_deck(polygon, top_trace="auto", slide=...) derives the fault's trace on the top
+  surface, snaps a pillar chain to it (the FAULTS), tilts the pillars into the plane and
+  drops the hanging wall 15 m along them: a dip-slip. The block loses the wedge
+  throw x thickness x cot(dip) per metre of fault.
+
+With matplotlib installed, B and C also write a PNG of the top shift and the throw profile.
 
 Pass --out DIR to keep the files, --deck DECK and --throw NAME=METRES (repeat) for your deck.
 """
 
 import argparse
+import importlib.util
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
-from cpg2unstructured import read_grdecl
-from fault_projections import Throw, adapt_deck, slide_deck, slide_grid
+from cpg2unstructured import pillar_lattice, read_grdecl
+from fault_projections import Throw, adapt_deck, slide_deck, slide_grid, write_slide_png
 from fault_projections.adapt import fault_faces_for
 from fault_projections.from_faults import faults_from_deck
 
@@ -35,6 +43,7 @@ TRACES = {"F1": np.array([[430.0, 0.0], [520.0, 300.0], [560.0, 560.0], [540.0, 
 THROWS = [Throw("F1", 20.0, hanging_side=(1100.0, 400.0)),
           Throw("F2", 12.0, hanging_side=(700.0, 200.0))]
 NORNE = "/mnt/c/projects/opm-machine/opm-tests/norne/INCLUDE/GRID/IRAP_1005.GRDECL"
+PNG = importlib.util.find_spec("matplotlib") is not None
 
 
 def case_a(out):
@@ -103,7 +112,7 @@ def case_b(out, deck, throws):
     if not throws:
         raise SystemExit("--deck needs at least one --throw NAME=METRES")
     work = out / name
-    res = slide_deck(deck, throws, work, prefix="slid")
+    res = slide_deck(deck, throws, work, prefix="slid", png=PNG)
     assert res.ok and not res.unexpected and res.topology_error is None
     grid = read_grdecl(res.grid_path)
     assert np.array_equal(grid.coord, res.before.coord), "COORD must not change"
@@ -121,6 +130,61 @@ def case_b(out, deck, throws):
           + f"; {len(res.opened)} faces opened, none outside FAULTS; round trip {trip:.1e} m")
     print(f"{'':20s} COORD unchanged; cell volume change max {100 * dv.max():.2f} % (tilted "
           f"pillars); {len(res.connections):,} connections in {res.report_path.name}")
+    if res.png_path:
+        print(f"{'':20s} wrote {res.png_path.name}")
+
+
+def case_c(out):
+    name = "C_dipping_fault"
+    work = out / name
+    work.mkdir(exist_ok=True)
+    raw = layer_cake(NX, NY, len(DZ), DX, DZ, top=lambda x, y: 1000.0)
+    deck = write_deck(work / "raw.grdecl", raw, {}, header=f"{name}: no FAULTS")
+    dip, strike, p0 = np.radians(65.0), np.radians(20.0), np.array([560.0, 400.0, 1000.0])
+    along = np.array([np.sin(strike), np.cos(strike), 0.0])
+    down = np.array([np.cos(strike) / np.tan(dip), -np.sin(strike) / np.tan(dip), 1.0])
+    normal = np.cross(along, down) / np.linalg.norm(np.cross(along, down))
+
+    def on_plane(depth, s):
+        return p0 + (depth - 1000.0) * down + s * along
+
+    polygon = np.array([on_plane(990.0, -2000.0), on_plane(990.0, 2000.0),
+                        on_plane(1100.0, 2000.0), on_plane(1100.0, -2000.0)])
+    t = 15.0
+    res = adapt_deck(deck, polygon, work, top_trace="auto", fault_names="DIP",
+                     slide=Throw("DIP", t, hanging_side=(1100.0, 400.0)),
+                     **{**MORPH, "boundary": "slide"})
+    assert res.ok and res.faces_invariant and res.slide.modes == {"DIP": "rigid"}
+    assert unwelded_faces(res.grid) == set(res.slide.opened) == set(res.faults_after)
+    trace = np.c_[res.top_trace, np.full(len(res.top_trace), 1000.0)]
+    assert np.abs((trace - p0) @ normal).max() < 1e-6, "the auto trace lies on the plane"
+
+    def gap(grid):
+        ij = set()
+        for f in res.faults_after:
+            ij |= {(f.i, f.j - 1), (f.i, f.j)} if f.face == "X" else {(f.i - 1, f.j), (f.i, f.j)}
+        i, j = np.array(sorted(ij)).T
+        lat = pillar_lattice(grid)
+        ends = np.r_[np.c_[lat.top[i, j], lat.z_top[i, j]], np.c_[lat.bot[i, j], lat.z_bot[i, j]]]
+        return np.abs((ends - p0) @ normal)
+
+    g1, g2 = gap(res.stage1.grid), gap(res.slide.before)
+    assert g1.max() > 30.0 and g2.max() < 0.1 * DX, (g1.max(), g2.max())
+    dims = raw.cart_dims
+    dv = float(process(res.grid).volume_grid(dims).sum()
+               - process(res.slide.before).volume_grid(dims).sum())
+    length = res.slide.chains["DIP"].length
+    wedge = -t * sum(DZ) / np.tan(dip) * length
+    assert abs(dv - wedge) < 0.03 * abs(wedge), (dv, wedge)
+    print(f"{name:20s} 65 deg polygon, no FAULTS in the deck: auto top trace of "
+          f"{len(res.top_trace)} points on the plane; {len(res.faults_after)} FAULTS faces")
+    print(f"{'':20s} chain pillar ends to the plane {g1.max():.0f} m after stage 1 -> max "
+          f"{g2.max():.1f}, mean {g2.mean():.1f} m tilted; hanging wall -{t:g} m (rigid)")
+    print(f"{'':20s} volume {dv:,.0f} m3 vs the wedge {wedge:,.0f} m3 "
+          f"({100 * (dv / wedge - 1):+.1f} %); {len(res.slide.opened)} faces opened, all in FAULTS")
+    if PNG:
+        png = write_slide_png(res.slide, work / "C_dipping_fault_slide.png")
+        print(f"{'':20s} wrote {png.name}")
 
 
 def parse_throw(text):
@@ -132,6 +196,7 @@ def main(out, deck, throws):
     out.mkdir(parents=True, exist_ok=True)
     case_a(out)
     case_b(out, deck, throws)
+    case_c(out)
     print("every case: COORD stays the adapted one, only FAULTS faces open, files read back")
 
 

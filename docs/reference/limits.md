@@ -33,7 +33,9 @@
   - A dipping fault that ends on the grid rim cannot be adapted with a
     stage-2 polygon under `boundary="pinned"`, because the rim pillars
     stay vertical. Lesson 21 leans the hanging-wall pillars first,
-    then adapts with a 2D trace (stage 1 keeps the lean).
+    then adapts with a 2D trace (stage 1 keeps the lean). With
+    `boundary="slide"` the rim pillars can tilt: lesson 30 C adapts a
+    rim-to-rim 65° polygon with `top_trace="auto"`.
   - Slides across K faces are not covered: k-direction faults still
     raise `NonMatchingZError`.
 - **Slide gallery (lessons 23–29):** the helper `fieldbook/zslide.py`
@@ -62,10 +64,13 @@
   every fault into one group. The lessons no longer call the old
   guards `interior` and `close_ring`; `named_chains` and `taper_cells=0`
   remain where a lesson needs them.
+- **Fixed upstream in fault-projections 0.4.0:** a stage-2 polygon or
+  facets alone give no connected chain. `adapt_grid(..., top_trace=...)`
+  now runs stage 1 on the top trace and then stage 2 (`"auto"` derives the
+  trace), and lesson 25 uses it. `faces_invariant` no longer reports a change
+  for a trace through inactive columns (an L-shaped active region): only
+  faces with active cells on both sides are compared. `slide_deck(png=True)`
+  writes a figure.
 - **Still open upstream:**
-  - Stage 2 alone gives no connected chain: run stage 1 with the top
-    trace first.
   - Without the barrier polish, the minimum scaled Jacobian can fall
     to about 2e-4.
-  - A trace that runs into inactive columns of an irregular active
-    region can still give `faces_invariant` False.
