@@ -57,34 +57,41 @@ Faults are X faces on one pillar line: F sits at x = 400 m (pillar line 8).
 All cross-sections below are drawn from the real cell faces of row 0, with
 true vertical scale, so the angles you see are the angles in the grid.
 
-## A. A rigid 60° dip
+## A. A 60° dip: free, fixed outline, or decay
 
 F runs from rim to rim, so it cuts the grid in two. With `decay="auto"` this
 gives **rigid** mode:
 
-- the whole hanging wall takes the full tilt, so it shears parallel to the
-  fault as one block;
+- the hanging wall takes the full tilt, so it shears parallel to the fault as
+  one block;
 - the footwall takes the change back over a cosine fade (here 100 m: two
   cells).
 
-![Rigid and decay modes](../assets/fault-dip/rigid-vs-decay.png)
+The figure shows the grid before the dip and three versions after it:
+`boundary="free"`, the default `boundary="fixed"`, and `decay=300`.
+
+![Free, fixed and decay](../assets/fault-dip/rigid-vs-decay.png)
 
 **What to expect:**
 
-- **The angle:** F dips 60.000000000° at all 9 fault pillars.
-- **The pillar lean** on lines 5–16: `0 0 26 52 52 … 52` m. Line 7, one
-  cell into the footwall, takes half the tilt.
-- **Hanging-wall volumes** change by 1e-14: no change, within rounding.
+- **The angle:** F dips 60.000000000° at all 9 fault pillars in every
+  version.
+- **`boundary="free"`:** the pillar lean on lines 5–16 is `0 0 26 52 52 … 52`
+  m. Line 7, one cell into the footwall, takes half the tilt. Hanging-wall
+  volumes do not change (0.0). The whole hanging wall leans, *including the
+  east rim of the grid*.
 - **Footwall volumes:** cells change by up to 21.65 %. Column 7, from top to
   base, changes by −21.65, −10.10, +2.89 and +17.32 %. The tilt **moves
   volume between layers**: the top of the footwall column narrows and its base
-  widens. Every column keeps its total volume, to 8e-15.
-- **The rim:** rigid mode leans the whole hanging wall, *including the
-  east rim of the grid*. If the model outline must stay vertical, pass a
-  distance, `decay=300`. The tilt then fades out on both sides: the rim lean
-  is 0.0 m, and the lean on lines 3–13 is
-  `3.5 13 26 39 48.5 52 48.5 39 26 13 3.5` m. Cells then change by up to
-  10.83 % on both sides.
+  widens. Every column keeps its total volume, to 2e-15.
+- **The default, `boundary="fixed"`:** the outline holds. The lean on lines
+  5–16 is `0 0 26 52 … 52 26 0` m: the hanging wall is rigid up to one cell
+  from the east side and released over the last cell. F is still exactly
+  60°, but the hanging-wall cells next to the east side change volume by up
+  to 21.7 %.
+- **`decay=300`:** the tilt fades out on both sides. The rim lean is 0.0 m,
+  and the lean on lines 3–13 is `3.5 13 26 39 48.5 52 48.5 39 26 13 3.5` m.
+  Cells change by up to 10.83 % on both sides.
 
 ## B. Why the neighbours must move
 
@@ -173,22 +180,25 @@ is pinned locally to zero at the other dipped faults.
 
 | Mode | A | B | Cells, max change | Rim lean (W / E) |
 |---|---|---|---|---|
-| rigid | 60.000000° | 70.000000° | 35.73 % | −32.8 / +52.0 m |
+| rigid, `boundary="free"` | 60.000000° | 70.000000° | 35.73 % | −32.8 / +52.0 m |
+| rigid, default `boundary="fixed"` | 60.000000° | 70.000000° | 35.73 % | 0.0 / 0.0 m |
 | `decay=150` | 60.000000° | 70.000000° | 21.65 % | 0.0 / 0.0 m |
 
-In both modes every column keeps its total volume to 8e-15. In rigid mode
-each outer block is on the hanging side of the *far* fault, so it leans with
-it, rim and all. `decay=` keeps the rims vertical.
+With `boundary="free"`, each outer block is on the hanging side of the *far*
+fault, so it leans with it, rim and all. The default fixed outline holds both
+rims still: the outer blocks shear back to them. `decay=` fades the tilt out
+instead.
 
 ## H. The gate: widening, refusing, bisecting
 
-The dipped grid is checked where the cells are: at the top, middle and base
+The dipped grid is checked where the cells are. At the top, middle and base
 of every active cell, the plan-view corners and edges are compared with the
-original. A cell fails if:
+original, and each cell's 3-D scaled Jacobian is sampled at 27 points. A
+cell fails if:
 
-- a corner folds;
-- its scaled Jacobian falls below `min_jacobian` (0.05) **and** below what it
-  was;
+- a corner folds, in plan or in 3-D;
+- its worst scaled Jacobian falls below `min_jacobian` (0.05) **and** more
+  than 1 % below what it was;
 - an edge shrinks below `min_fraction` (10 %) of its length;
 - or the grid no longer re-processes.
 
@@ -225,21 +235,32 @@ Case J runs when Norne is on the machine (`CPG_NORNE_GRDECL`, as in lesson
 - **E_01 → 60°: passes.** E_01 was 63.0° to 98.4° on 28 pillars; above 90°
   means one end leans past vertical. After the dip it is 60.000000° when the
   written file is read back. Decay mode with a 1,278 m fade; all cells valid;
-  cell volumes change by up to 43.2 %.
+  cell volumes change by up to 42.7 %.
 - **BC → 70° with the default middle pivot: fails.** `DipError: the dip
   fails the validity gate even with the fades widened x16: INVALID cells:
-  1 folded`. BC's present dip jumps from 59° to 84° within four neighbouring
-  pillars, so a uniform 70° needs very different tilts on adjacent pillars,
-  and one top-layer cell folds however wide the fade.
+  3 folded, 2 degenerate, 0 squeezed`. BC's present dip jumps from 59° to 84°
+  within four neighbouring pillars, so a uniform 70° needs very different
+  tilts on adjacent pillars, and top-layer cells fold however wide the fade.
 - **BC → 70° with `pivot="top"`: passes.** BC was 36.8° to 84.0°; it is now
-  70.000000° (fades widened ×4), and all cells are valid. 65° with the
-  default pivot also passes (widened ×4). With `decay=1000` and
-  `on_invalid="bisect"`, 94.2 % of the change is applied and BC lies between
-  67.2° and 70.8°: valid, but not the angle requested.
-- **Also failing at 70° with the middle pivot:** `decay` 500, 1000 or 2000;
-  `pivot="bottom"`; `smoothing=400`. 75° and 80° fail too. These runs were
-  made while writing this page, not in the lesson, to keep its run time
-  short.
+  70.000000° (fades widened ×4), and all cells are valid.
+- **More runs, made while writing this page** (not in the lesson, to keep its
+  run time short; current library, default fixed outline unless noted):
+
+  | BC request | Result |
+  |---|---|
+  | 70°, `decay` 500, 1000 or 2000 | fails: 3 folded, 2 degenerate |
+  | 70°, `pivot="bottom"` | fails: 20 folded, 1 degenerate |
+  | 70°, `smoothing=400` | fails: 11 folded, 2 degenerate |
+  | 70°, `boundary="free"` | fails: 1 folded |
+  | 75° / 80° | fails: 11 / 15 folded |
+  | 65°, middle pivot | fails: 0 folded, 3 degenerate (cells already at a Jacobian of 0.021 drop to 0.0207, more than the 1 % the gate allows) |
+  | 65°, middle pivot, `boundary="free"` | fails: 1 degenerate (0.021 → 0.0203) |
+  | 65°, `pivot="top"` | passes: 65.0000°, widened ×4 |
+  | 70°, `decay=1000, on_invalid="bisect"` | 79.3 % of the change applied; BC lies between 60.5° and 72.8°: valid, but not the angle requested |
+
+  An earlier version of this page reported that 65° with the middle pivot
+  passed. It did then: the gate did not yet check cells in 3-D or allow only
+  1 % worsening of already-poor cells. Under the current gate it fails.
 
 When a field fault refuses, try a different `pivot`, a smaller change, or a
 longer `decay`/`footwall`, in that order, and read `summary()` each time.

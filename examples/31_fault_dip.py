@@ -9,9 +9,11 @@ Every case re-derives its numbers from the grid itself rather than trusting the 
 angles from the six COORD numbers of each pillar, volumes from a re-processed topology,
 untouched keywords by byte comparison.
 
-- A rigid 60 deg: a rim-to-rim fault; the hanging wall shears as one block, so its cell
-  volumes do not change; the footwall absorbs the change over a cosine fade. With
-  decay=<distance> the tilt fades out on both sides instead and the grid rim stays vertical;
+- A rigid 60 deg: a rim-to-rim fault. With boundary="free" the hanging wall shears as one
+  block, so its cell volumes do not change, and the footwall absorbs the change over a
+  cosine fade. By default (boundary="fixed") the grid's outline holds still: the angle is
+  the same, and the hanging-wall cells next to the east side change volume instead. With
+  decay=<distance> the tilt fades out on both sides;
 - B why neighbours move: 40 deg by tilting only the fault pillars folds cells; dip_grid
   moves the neighbours too and every cell stays valid;
 - C pivots: the depth where pillars keep their plan position (top, middle, bottom, a depth);
@@ -19,7 +21,8 @@ untouched keywords by byte comparison.
 - D a fault with a tip: the tilt fades out around the tip on both sides; volumes change there;
 - E an angle table along strike: 55 deg at the south rim to 80 deg at the north rim;
 - F a stair-stepped diagonal fault: the dip is set along its smoothed strike;
-- G a graben: two facing faults, 60 and 70 deg, both exact, rigid and with decay;
+- G a graben: two facing faults, 60 and 70 deg, both exact: rigid with the rim free, with
+  the rim fixed (default), and with decay;
 - H the gate: an impossible footwall fade is widened (warning); with widening off it raises,
   or bisects and then does NOT reach the angle;
 - I on a deck: dip_deck dips and slides 12 m in one call; the written file is read back and the
@@ -142,7 +145,7 @@ def case_a(out):
     name = "A_rigid_60"
     grid = cake()
     faults = {"F": x_fault(8, 1, NY)}                       # x = 400 m, south rim to north rim
-    res = dip_grid(grid, Dip("F", 60.0, hanging_side=EAST), faults=faults)
+    res = dip_grid(grid, Dip("F", 60.0, hanging_side=EAST), faults=faults, boundary="free")
     assert res.ok and res.modes == {"F": "rigid"} and res.scale == 1.0
 
     got = [coord_dip(res.grid, 8, j, (1.0, 0.0)) for j in range(NY + 1)]
@@ -156,6 +159,12 @@ def case_a(out):
     lean = (pillar_lattice(res.grid).bot - pillar_lattice(res.grid).top)[:, 0, 0]
     assert np.allclose(lean[8:], H / np.tan(np.radians(60.0)))
     assert cells_valid(grid, res.grid).ok
+
+    held = dip_grid(grid, Dip("F", 60.0, hanging_side=EAST), faults=faults)   # the default
+    held_lean = (pillar_lattice(held.grid).bot - pillar_lattice(held.grid).top)[:, 0, 0]
+    held_dv = rel_change(grid, held.grid)
+    assert held.ok and held_lean[0] == 0.0 and held_lean[-1] == 0.0
+    assert np.allclose([coord_dip(held.grid, 8, j, (1.0, 0.0)) for j in range(NY + 1)], 60.0)
 
     rim = dip_grid(grid, Dip("F", 60.0, hanging_side=EAST, decay=300.0), faults=faults)
     rim_lean = (pillar_lattice(rim.grid).bot - pillar_lattice(rim.grid).top)[:, 0, 0]
@@ -174,19 +183,25 @@ def case_a(out):
           f"{100 * np.abs(dv[:8]).max():.2f} % (column 7, top to base: "
           + ", ".join(f"{100 * v:+.2f}" for v in dv[7, 0]) + " %); every column total "
           f"{np.abs(col).max():.0e}")
-    print(f"{'':22s} rigid mode leans the whole hanging wall, east rim included. "
-          f"decay=300 instead: rim lean {rim_lean[-1]:.1f} m, lean on lines 3..13 "
+    print(f"{'':22s} boundary='free': the rigid hanging wall leans as one block, east rim "
+          f"included. The default boundary='fixed' holds the outline: lean on lines 5..16 "
+          + " ".join(f"{v:.1f}" for v in held_lean[5:])
+          + f"; F still {min(got):.6f} deg; hanging-wall cells change up to "
+          f"{100 * np.nanmax(np.abs(held_dv[8:])):.1f} % next to the east side")
+    print(f"{'':22s} decay=300 instead: rim lean {rim_lean[-1]:.1f} m, lean on lines 3..13 "
           + " ".join(f"{v:.1f}" for v in rim_lean[3:14])
           + f", cells change up to {100 * np.nanmax(np.abs(rim_dv)):.2f} % on both sides")
     if out and PNG:
         import matplotlib.pyplot as plt
 
-        fig, axes = plt.subplots(3, 1, figsize=(9, 5.0))
+        fig, axes = plt.subplots(4, 1, figsize=(9, 6.6))
         section(axes[0], grid, 0, "before: vertical pillars, F at x = 400 m", faults=[8])
-        section(axes[1], res.grid, 0, "rigid (default): F at 60 deg, the hanging wall leans as "
+        section(axes[1], res.grid, 0, "boundary='free': F at 60 deg, the hanging wall leans as "
                 f"one block, footwall fade {res.fade['F'][1]:.0f} m", faults=[8])
-        section(axes[2], rim.grid, 0, "decay=300: F at 60 deg, the tilt fades out on both "
-                "sides, the grid rim stays vertical", faults=[8])
+        section(axes[2], held.grid, 0, "default boundary='fixed': F at 60 deg, the grid's "
+                "outline holds still", faults=[8])
+        section(axes[3], rim.grid, 0, "decay=300: F at 60 deg, the tilt fades out on both "
+                "sides", faults=[8])
         save(fig, out / "31_A_rigid_60.png")
     return res
 
@@ -368,7 +383,8 @@ def case_g(out):
 
     v0 = volumes(grid)
     rows = []
-    for label, res in (("rigid", dip_grid(grid, dips(), faults=faults)),
+    for label, res in (("free", dip_grid(grid, dips(), faults=faults, boundary="free")),
+                       ("fixed", dip_grid(grid, dips(), faults=faults)),
                        ("decay=150", dip_grid(grid, dips(decay=150.0), faults=faults))):
         assert res.ok and cells_valid(grid, res.grid).ok
         a = [coord_dip(res.grid, 5, j, (1.0, 0.0)) for j in range(NY + 1)]
@@ -379,22 +395,26 @@ def case_g(out):
         assert np.abs(col).max() < 1e-12
         lean = (pillar_lattice(res.grid).bot - pillar_lattice(res.grid).top)[:, 0, 0]
         rows.append((label, res, a, b, dv, lean))
-    assert rows[0][5][0] != 0.0 and rows[1][5][0] == 0.0 == rows[1][5][-1]
-    for label, res, a, b, dv, lean in rows:
-        print(f"{name if label == 'rigid' else '':22s} {label:9s}: A (x=250, dips east) "
+    assert rows[0][5][0] != 0.0
+    assert all(r[5][0] == 0.0 == r[5][-1] for r in rows[1:])
+    for label, _res, a, b, dv, lean in rows:
+        print(f"{name if label == 'free' else '':22s} {label:9s}: A (x=250, dips east) "
               f"{min(a):.6f}..{max(a):.6f} deg, B (x=550, dips west) {min(b):.6f}..{max(b):.6f}"
               f" deg; cells up to {100 * np.nanmax(np.abs(dv)):.2f} %, rim leans "
               f"{lean[0]:+.1f} / {lean[-1]:+.1f} m")
-    print(f"{'':22s} rigid: each outer block is on the hanging side of the far fault, so it "
-          "leans with it; decay keeps the rims vertical")
+    print(f"{'':22s} rigid with boundary='free': each outer block is on the hanging side of "
+          "the far fault, so it leans with it; the default boundary='fixed' holds the rims "
+          "still (the outer blocks shear back to them); decay fades the tilt out instead")
     if out and PNG:
         import matplotlib.pyplot as plt
 
-        fig, axes = plt.subplots(2, 1, figsize=(9, 3.5))
-        section(axes[0], rows[0][1].grid, 0, "G rigid: A 60 deg and B 70 deg dip toward each "
-                "other; the outer blocks lean with the far fault", faults=[5, 11])
-        section(axes[1], rows[1][1].grid, 0, "G decay=150: same angles, the tilt fades out "
-                "and the rims stay vertical", faults=[5, 11])
+        fig, axes = plt.subplots(3, 1, figsize=(9, 5.0))
+        section(axes[0], rows[0][1].grid, 0, "G boundary='free': A 60 deg and B 70 deg dip "
+                "toward each other; the outer blocks lean with the far fault", faults=[5, 11])
+        section(axes[1], rows[1][1].grid, 0, "G default boundary='fixed': same angles, the "
+                "grid's outline holds still", faults=[5, 11])
+        section(axes[2], rows[2][1].grid, 0, "G decay=150: same angles, the tilt fades out "
+                "on both sides", faults=[5, 11])
         save(fig, out / "31_G_graben.png")
 
 
@@ -441,7 +461,7 @@ def case_i(out):
     faults = {"F": x_fault(8, 1, NY)}
     deck = write_deck(work / "case.grdecl", grid, faults, header=f"{name}: vertical F")
     before = deck.read_bytes()
-    res = dip_deck(deck, Dip("F", 65.0, hanging_side=EAST), work,
+    res = dip_deck(deck, Dip("F", 65.0, hanging_side=EAST), work, boundary="free",
                    slide=Throw("F", 12.0, hanging_side=EAST))
     assert res.ok and res.slide is not None and res.slide.ok and not res.slide.unexpected
     assert deck.read_bytes() == before, "the input deck is never written"

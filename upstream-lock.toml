@@ -8,5 +8,5 @@ version = "0.4.0"
 [fault_projections]
 repository = "https://github.com/arturcastiel/fault-projections"
 local_directory = "../fault-projections"
-revision = "75f6dd28e8d6fd3df0d866c71ca2849505e0c5f5"
+revision = "48dd1ece3614b875c524e9a6a6bbefac99ddf5d7"
 version = "0.4.0"
