@@ -60,7 +60,9 @@ results. Add `--out DIR` to keep the decks it writes.
 | 28 | `gallery_regridding` | **Gallery:** fault transfer, resolution, solver settings, ACTNUM, damage zone |
 | 29 | `gallery_export_workflows` | **Gallery:** simulator bundle, `adapt_deck`, VTK series, round trip |
 | 30 | `deck_slide_workflows` | **Decks:** `adapt_deck(slide=...)` in one call; slide Norne's FAULTS (`--deck`, `--throw`); a dipping fault in one call (`top_trace="auto"`) |
-| 31 | `fault_dip` | **Fault dip:** set a fault's angle by tilting pillars (COORD only): rigid vs decay, pivots, a tip, an angle table, a stair-stepped fault, a graben, the validity gate, `dip_deck(slide=...)`, and Norne (one pass, one honest failure) |
+| 31 | `fault_dip` | **Fault dip:** set a fault's angle by tilting pillars (COORD only): free vs fixed outline vs decay, pivots, a tip, an angle table, a stair-stepped fault, a graben, the validity gate, `dip_deck(slide=...)`, and Norne (one pass, one honest failure) |
+| 32 | `fault_dip_stress` | **Fault dip, stress:** 22 hard cases (curved and S traces, graben/horst, domino, T-junction, caldera, growth and blind faults, pinch-outs, skewed columns, shallow and random angles, seeded fuzz, Norne), each judged by an independent cell checker |
+| 33 | `fault_zone` | **Fault zones:** the cells within −D/+D of each fault (vertical, dipping, asymmetric, curved, crossing, `FLTZONE` export, Norne), and an optional `zone=` that keeps a dip or slide inside them |
 
 Lessons 23-30 share [`fieldbook/zslide.py`](fieldbook/zslide.py), which
 slides faults with `fault_projections.slide_grid` and adds the lessons'
@@ -70,6 +72,10 @@ independent checks. The
 Lesson 31 calls `fault_projections.dip_grid` and re-checks every result
 from COORD, a re-processed topology or the bytes on disk; the
 [fault-dip page](docs/learn/fault-dip.md) lists what each case must print.
+Lesson 32 judges every dip and slide with a cell checker that shares no
+code with the library ([stress page](docs/learn/fault-dip-stress.md)), and
+lesson 33 re-measures every fault zone by the plane's equation or brute
+force ([fault-zone page](docs/learn/fault-zone.md)).
 
 ![Structural styles gallery](docs/assets/gallery/structural-styles.png)
 
@@ -84,8 +90,9 @@ into `output/figures/`:
 .venv/bin/python tools/figures/make_figures.py --only 07 10 # some
 ```
 
-The fault-dip figures in `docs/assets/fault-dip/` come from lesson 31
-(about 30 s, needs matplotlib):
+The figures in `docs/assets/fault-dip/`, `fault-dip-stress/` and
+`fault-zone/` come from lessons 31, 32 and 33 (about 5 min, needs
+matplotlib):
 
 ```bash
 .venv/bin/python tools/figures/fault_dip.py

@@ -22,6 +22,8 @@ export drift.
 | Slide gallery | `fieldbook/zslide.py` over `fault_projections.slide_grid` | 23–29 gallery lessons, 38 cases | Synthetic only; exercises `adapt_grid`, `adapt_deck`, stage-2 polygons, faceted and quad-mesh projection, `cell_corridor`, VTK writers |
 | Deck slide workflows | `slide_deck`, `adapt_deck(slide=...)` | 30_deck_slide_workflows | Synthetic, and Norne when present |
 | Fault dip (COORD only) | `fault_projections.Dip`, `dip_grid`, `dip_deck` | 31_fault_dip, 10 cases (A–J) | Synthetic; case J runs on Norne when present |
+| Fault-dip stress cases | `dip_grid`, `slide_grid`, `adapt_grid`, judged by an independent cell checker | 32_fault_dip_stress, 22 cases (A–V) | Synthetic and seeded fuzz; case V runs on Norne when present |
+| Fault zones | `fault_projections.fault_zone`, `FaultZone`, `write_zone`; `zone=` on `dip_grid` and `slide_grid` | 33_fault_zone, 11 cases (A–K) | Synthetic; case K runs on Norne when present |
 | Shapefile and VTK plotting | Legacy description | None yet | Not verified end-to-end here |
 | Other root exports/types/errors | Legacy directory | Upstream tests only | Reference expansion pending |
 

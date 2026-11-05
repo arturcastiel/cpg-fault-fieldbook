@@ -25,11 +25,35 @@ dip_grid(
     min_fraction: float = 0.10,  # gate floor on edge length, fraction of the original
     passes: int = 6,           # rounds for several dips to hold their angles together
     report: bool = True,       # re-process the grid (part of the gate), fill volumes
+    slide=None,                # Throw(s) to slide the dipped grid by (fades widen until it fits)
+    slide_options=None,        # keywords for slide_grid
+    boundary: str = "fixed",   # "fixed": the grid's outline holds; "free": it leans
+    zone=None,                 # None: the whole grid may move; D, (D_fw, D_hw) or a FaultZone
 ) -> DipResult
 ```
 
 `faults` decides which faults separate the grid, which in turn decides each
 dip's mode. Give all of a deck's faults when the dipped fault abuts others.
+
+- **`boundary="fixed"`** (default): the four outer sides of the grid hold
+  still. A pillar on a side keeps only the part of its shift along that side
+  (a roller), and the four corner pillars do not move. The release fades in
+  from the side over the fade distance. Fault pillars within it lean along
+  strike, so the angle stays exact. A hanging wall that reaches the rim is
+  therefore not rigid next to it, and those cells change volume.
+  `boundary="free"` lets the outline lean with the change (the rigid shear of
+  earlier versions).
+- **`zone`** keeps the dip inside the cells within a distance of the dipped
+  faults ([Fault zones](fault-zone.md)). A pillar moves only if every cell on
+  it (all layers, all four columns) is in the zone. The change fades with a
+  cosine from full on the fault to zero at the nearest frozen pillar. Every
+  cell outside the zone keeps its corners bit for bit, and a `slide=` is
+  confined to the same zone. A zone that freezes a fault pillar raises
+  `ZoneError`. `DipResult.zone` holds the zone used, and `DipResult.moved`
+  marks the cells that moved.
+- **`slide`**: each widening step must also let `slide_grid` take the full
+  throw through its cell gate. A dip that passes at the present depths could
+  otherwise fail once the slide moves the cells down converging pillars.
 
 `Dip(fault, angle=60.0, hanging_side=None, pivot="middle", decay="auto",
 footwall="auto", smoothing=None, name="")` describes one fault:
@@ -63,27 +87,35 @@ depth away from the pivot depth `z0`. A corner at depth `z` moves by
   `(s·t) t + cot(angle) n`. The along-strike component of the lean is kept;
   the component along the dip direction is set to `cot(angle)`. So
   `k = (s·t) t + cot(angle) n − s`.
-- **Off the fault**, `k` and `z0` are spread from the chain pillars by the
-  weights `ℓ_m / (r² + σ²)`, with `ℓ_m` the arc length each chain pillar
-  stands for and `σ` the smoothing. Curved and stair-stepped faults thus give
-  a smooth field.
+- **Off the fault**, `k` and `z0` are spread from the chain pillars by a
+  local linear fit along strike, weighted by `ℓ_m / (r² + σ²)`. Here `ℓ_m` is
+  the arc length each chain pillar stands for and `σ` is the smoothing.
+  Curved and stair-stepped faults therefore give a smooth field. Off a
+  straight fault the field is constant along the fault's normal, so a rigid
+  hanging wall stays rigid, also near the fault's ends. Past a tip, the fit is
+  read at the tip.
 - **The weight `w`** fades with a cosine ramp:
   - in **rigid** mode, `w = 1` on every pillar of the hanging wall (the flood
-    fill of the side the fault separates, *including the rim and any blocks
-    beyond other faults*), fading to 0 over `footwall` into the footwall;
+    fill of the side the fault separates, including any blocks beyond other
+    faults), fading to 0 over `footwall` into the footwall. With the default
+    `boundary="fixed"`, the shift across the rim is then released near the
+    rim;
   - in **decay** mode, `w` fades with distance from the fault on both sides:
     over `decay` on the hanging side and over `footwall` on the footwall.
-- **With several dips**, each dip's `w` is pinned to 0 at the other dipped
-  faults, locally (within the other fault's footwall fade). The dips are
-  applied in turn, and repeated up to `passes` times until every fault holds
-  its angle to 1e-9.
+- **With several dips**, each dip removes only the component of its change
+  *across* another dipped fault, locally (within that fault's footwall fade).
+  The other fault's own angle is untouched, and a pillar shared at a
+  T-junction holds both angles. The dips are applied in turn, and repeated up
+  to `passes` times until every fault holds its angle to 1e-9.
 
 The `"auto"` distances keep the strain in the fade zone at or below one half:
 `π` times the largest corner shift, and at least two cells.
 
-**Volumes.** In rigid mode on a straight fault, the hanging wall is sheared
-parallel to the fault, so its cells keep their volumes (lesson 31 measures
-1e-14). With the middle pivot, the top of a column moves opposite to its base
+**Volumes.** In rigid mode on a straight fault with `boundary="free"`, the
+hanging wall is sheared parallel to the fault, so its cells keep their
+volumes (lesson 31 measures 0). With the default fixed outline, that holds
+except within the release next to the rim (lesson 31 A: up to 21.7 %
+there). With the middle pivot, the top of a column moves opposite to its base
 by the same amount, so every column keeps its **total** volume. Volume still
 moves between the layers of a column (case A: −21.65 % to +17.32 % in one
 footwall column). The other pivots change column volumes.
@@ -93,11 +125,15 @@ footwall column). The other pivots change column volumes.
 The dipped grid is checked where cells are. At the top, middle and base of
 every active cell, the plan-view corner angles (scaled Jacobian, signed
 against the original orientation) and edge lengths are compared with the
-original. A cell fails if:
+original. Each cell's 3-D scaled Jacobian is also sampled at 27 points of its
+trilinear map (`quality.hex_jacobians`). A pillar tilted below the bedding it
+crosses can turn a cell inside out in 3-D while every plan section looks
+fine. A cell fails if:
 
-- a corner folds;
-- its scaled Jacobian falls below `min_jacobian` **and** below what it was
-  before (a cell that was already poor is not blamed for staying poor);
+- a corner folds, in plan or in 3-D;
+- its worst scaled Jacobian falls below `min_jacobian` **and** more than 1 %
+  below what it was before (a cell that was already poor is not blamed for
+  staying poor);
 - an edge falls below `min_fraction` of its original length;
 - or, with `report=True`, the grid no longer re-processes (`build_topology`).
 
@@ -153,7 +189,7 @@ grid = CornerPointGrid((nx, ny, nz), np.array(coord), zcorn.astype(float),
 f1 = [FaultFace(3, j, "X") for j in range(1, ny + 1)]   # rim to rim, x = 300 m
 res = dip_grid(grid, Dip(f1, 70.0, hanging_side=(500.0, 200.0), name="F1"))
 print(res.summary())
-# OK: 1 fault(s) dipped (F1 rigid) · F1 70..70 deg · cells valid (min corner Jacobian 1 -> 1) · max |volume change| 1.82 %
+# OK: 1 fault(s) dipped (F1 rigid) · F1 70..70 deg · cells valid (min corner Jacobian 1 -> 1, 3-D 1 -> 0.94) · max |volume change| 1.82 %
 print(res.realized_dip("F1"))           # (arc length, degrees) per fault pillar
 # [[  0.  70.]
 #  [100.  70.]
@@ -167,7 +203,8 @@ print(np.array(res.grid.coord).reshape(ny + 1, nx + 1, 6)[0, 3])
 
 Check it by hand: the pillar runs `305.460 − 294.540 = 10.919` m over 30 m,
 and `atan(30 / 10.919) = 70.000°`. The middle pivot (15 m) moved the top
-5.46 m west and the base 5.46 m east. This snippet was run against the pinned
+5.46 m west and the base 5.46 m east. The east rim pillars stay vertical at
+x = 600 m (the default fixed outline). This snippet was run against the pinned
 revisions.
 
 ## `dip_deck`
@@ -197,7 +234,7 @@ re-processed topology or the bytes on disk:
 
 | Case | What it shows |
 |---|---|
-| A | A rigid 60° dip on a rim-to-rim fault; `decay=300` keeps the rim vertical |
+| A | A 60° dip on a rim-to-rim fault: `boundary="free"` (rigid, the rim leans), the default fixed outline, and `decay=300` |
 | B | 40° needs more than a cell of lean: the naive tilt folds 16 columns, `dip_grid` stays valid |
 | C | The four pivots and what they do to column volumes |
 | D | A fault with a tip: decay mode, fading around the tip |
@@ -209,7 +246,10 @@ re-processed topology or the bytes on disk:
 | J | Norne (when present): E_01 → 60° passes; BC → 70° fails with the middle pivot and passes with `pivot="top"` |
 
 The full source and the numbers each case prints are on the
-[lesson page](../learn/fault-dip.md).
+[lesson page](../learn/fault-dip.md). Lesson 32
+([stress cases](../learn/fault-dip-stress.md)) runs 22 harder grids through an
+independent cell checker. Lesson 33 ([fault zones](../learn/fault-zone.md))
+confines dips with `zone=`.
 
 ## Failure modes and limitations
 
@@ -217,11 +257,18 @@ The full source and the numbers each case prints are on the
   fault in plan or change which faces it uses.
 - **Angles are limited to (0°, 90°].** Overturned faults can be measured
   (`realized_dip` above 90) but not requested.
-- **A rigid hanging wall leans entirely**, including the grid rim and any
-  fault blocks beyond it. Pass a `decay` distance to keep rims vertical.
-- **Cell volumes are not conserved one by one.** The rigid hanging wall
-  keeps them; footwall and fade-zone cells do not. With the middle pivot only
-  column totals are kept.
+- **With the default fixed outline, the hanging wall is not rigid next to the
+  rim.** The cells there change volume (lesson 31 A: up to 21.7 %), and a
+  shallow dip on a fault near a parallel side can be refused because the
+  release has no room. `boundary="free"` keeps the hanging wall rigid out to
+  the rim, but the rim then leans, along with any fault blocks beyond it.
+  `decay=` fades the tilt out instead.
+- **Cell volumes are not conserved one by one.** A rigid hanging wall away
+  from the rim keeps them; footwall and fade-zone cells do not. With the
+  middle pivot only column totals are kept.
+- **A zone must be wide enough for the change.** All of the tilt is taken up
+  between the fault and the zone's edge. A 30° dip inside 40 m folds cells and
+  is refused (lesson 33 J).
 - **Faults whose present dip varies sharply along strike can fail the gate**
   whatever the fade. Norne's BC jumps from 59° to 84° within four pillars, and
   at 70° with the middle pivot one top-layer cell folds even when widened ×16;
@@ -234,6 +281,8 @@ The full source and the numbers each case prints are on the
 
 ## Source and tests
 
-- [`dip_grid`, `dip_deck`, `Dip`, `DipResult`, `DipCheck`](https://github.com/arturcastiel/fault-projections/blob/75f6dd28e8d6fd3df0d866c71ca2849505e0c5f5/fault_projections/dip.py)
-  · [Dip tests](https://github.com/arturcastiel/fault-projections/blob/75f6dd28e8d6fd3df0d866c71ca2849505e0c5f5/tests/test_dip.py)
-- Lesson 31 ([fault dip](../learn/fault-dip.md))
+- [`dip_grid`, `dip_deck`, `Dip`, `DipResult`, `DipCheck`](https://github.com/arturcastiel/fault-projections/blob/48dd1ece3614b875c524e9a6a6bbefac99ddf5d7/fault_projections/dip.py)
+  · [Dip tests](https://github.com/arturcastiel/fault-projections/blob/48dd1ece3614b875c524e9a6a6bbefac99ddf5d7/tests/test_dip.py)
+- Lessons 31 ([fault dip](../learn/fault-dip.md)), 32
+  ([stress cases](../learn/fault-dip-stress.md)) and 33
+  ([fault zones](../learn/fault-zone.md))

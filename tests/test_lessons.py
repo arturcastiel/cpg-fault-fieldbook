@@ -10,6 +10,7 @@ import pytest
 from fieldbook.cli import lessons, main
 
 ROOT = Path(__file__).resolve().parents[1]
+SLOW = {"32_fault_dip_stress": 300, "33_fault_zone": 300}    # many cases, Norne included
 
 
 @pytest.mark.parametrize("script", lessons(), ids=lambda script: script.stem)
@@ -25,7 +26,8 @@ def test_lesson(script, tmp_path):
     if script.stem == "14_field_deck_intake":
         command.extend(["--deck", str(ROOT / "fieldbook" / "data" / "quickstart.grdecl")])
     result = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True,
-                            timeout=120, env=os.environ.copy())
+                            timeout=SLOW.get(script.stem, 120),
+                            env=os.environ.copy())
     assert result.returncode == 0, result.stdout + result.stderr
     if script.stem == "12_export_includes":
         assert (tmp_path / "outputs" / "fault_adapted_grid.grdecl").is_file()

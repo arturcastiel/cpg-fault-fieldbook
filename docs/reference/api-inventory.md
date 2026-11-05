@@ -125,6 +125,8 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `FaultRecord` | yes | Directory only |
 | `fault_projections` | `FaultSurface` | yes | [surface-projection](../functions/surface-projection.md) |
 | `fault_projections` | `FaultTrace` | yes | Directory only |
+| `fault_projections` | `FaultZone` | yes | Directory only |
+| `fault_projections` | `HexCheck` | yes | Directory only |
 | `fault_projections` | `MeshSkeleton` | yes | Directory only |
 | `fault_projections` | `MeshValidation` | yes | Directory only |
 | `fault_projections` | `MeshValidationError` | yes | Directory only |
@@ -137,6 +139,7 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `SlideError` | yes | [fault-slide](../functions/fault-slide.md) |
 | `fault_projections` | `SlideResult` | yes | [fault-slide](../functions/fault-slide.md) |
 | `fault_projections` | `Throw` | yes | [fault-slide](../functions/fault-slide.md) |
+| `fault_projections` | `ZoneError` | yes | Directory only |
 | `fault_projections` | `__version__` | yes | Directory only |
 | `fault_projections` | `adapt_deck` | yes | [adapt-grid](../functions/adapt-grid.md) |
 | `fault_projections` | `adapt_grid` | yes | [adapt-grid](../functions/adapt-grid.md) |
@@ -153,9 +156,12 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `fault_faces_for` | yes | Directory only |
 | `fault_projections` | `fault_polyline` | yes | Directory only |
 | `fault_projections` | `fault_polylines` | yes | Directory only |
+| `fault_projections` | `fault_zone` | yes | Directory only |
 | `fault_projections` | `faults_from_deck` | yes | Directory only |
 | `fault_projections` | `faults_text` | yes | Directory only |
 | `fault_projections` | `faults_text_3d` | yes | Directory only |
+| `fault_projections` | `hex_check` | yes | Directory only |
+| `fault_projections` | `hex_jacobians` | yes | Directory only |
 | `fault_projections` | `live_faces` | yes | [adapt-grid](../functions/adapt-grid.md) |
 | `fault_projections` | `parse_faults_text` | yes | Directory only |
 | `fault_projections` | `path_to_faults` | yes | Directory only |
@@ -188,3 +194,4 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `write_faults` | yes | Directory only |
 | `fault_projections` | `write_faults_3d` | yes | Directory only |
 | `fault_projections` | `write_slide_png` | yes | [fault-slide](../functions/fault-slide.md) |
+| `fault_projections` | `write_zone` | yes | Directory only |

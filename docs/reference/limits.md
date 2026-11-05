@@ -37,7 +37,8 @@
     `boundary="slide"` the rim pillars can tilt: lesson 30 C adapts a
     rim-to-rim 65° polygon with `top_trace="auto"`. To set the angle of
     a fault that is already in `FAULTS`, use `dip_grid` (lesson 31): it
-    leans the pillars, rim included, without adapting.
+    leans the fault's pillars without adapting, those on the rim too
+    (along the rim, with the default fixed outline).
   - Slides across K faces are not covered: k-direction faults still
     raise `NonMatchingZError`.
 - **Slide gallery (lessons 23–29):** the helper `fieldbook/zslide.py`
@@ -73,22 +74,38 @@
   for a trace through inactive columns (an L-shaped active region): only
   faces with active cells on both sides are compared. `slide_deck(png=True)`
   writes a figure.
-- **Fault dip (lesson 31):** `fault_projections.dip_grid` changes COORD
-  only.
-  - A rigid hanging wall leans entirely, including the grid rim and any
-    blocks beyond other faults (case A, graben case G). A `decay` distance
-    keeps rims vertical.
-  - Cell volumes are not conserved one by one. A rigid hanging wall
-    keeps them (1e-14); footwall and fade-zone cells change (case A: up
-    to 21.65 %; the tipped fault of case D: up to 29.4 %). The middle
-    pivot keeps column totals only.
+- **Fault dip (lessons 31 and 32):** `fault_projections.dip_grid` changes
+  COORD only.
+  - The default `boundary="fixed"` holds the grid outline. A hanging wall
+    that reaches the rim is then not rigid next to it (case A: cells there
+    change up to 21.7 %), and a shallow fault near a parallel side can be
+    refused (lesson 32 O: 15° refused, 30° passes). `boundary="free"` keeps
+    the hanging wall rigid but leans the rim and any blocks beyond other
+    faults; a `decay` distance fades the tilt out instead.
+  - Cell volumes are not conserved one by one. A rigid hanging wall away from
+    the rim keeps them to rounding (6.2e-15 in case I); footwall and
+    fade-zone cells change
+    (case A: up to 21.65 %; the tipped fault of case D: up to 29.4 %). The
+    middle pivot keeps column totals only.
   - Bisection (`on_invalid="bisect"`) keeps the grid valid but misses
     the angle (case H: 45° for 35° requested).
-  - **Field result (case J, Norne):** E_01 → 60° passes. BC → 70° fails
-    the gate with the default middle pivot, even with the fades widened
-    ×16: its present dip jumps from 59° to 84° within four pillars, and
-    one top-layer cell folds. `pivot="top"` and 65° pass. A smarter
+  - The gate is conservative where bedding is steeper than the fault: the
+    plan view of a cell's top flips while the 3-D cell is sound, and the
+    dip is refused (lesson 32 R). In lesson 32's fuzz, 4 of 105 verdicts
+    were such refusals; none was an accepted grid with broken cells.
+  - **Field result (lesson 31 J, Norne):** E_01 → 60° passes. BC → 70°
+    fails the gate with the default middle pivot, even with the fades
+    widened ×16: its present dip jumps from 59° to 84° within four
+    pillars, and top-layer cells fold. `pivot="top"` passes at 65° and
+    70°; 65° with the middle pivot now fails on three already-poor cells
+    (Jacobian 0.021 → 0.0207, beyond the gate's 1 % allowance). A smarter
     spread for faults with sharply varying dip is not implemented.
+- **Fault zones (lesson 33):** `fault_zone` selects cells by their centre's
+  distance from the fault surface; it never changes the grid. `zone=`
+  confines a dip or slide, but the whole change is then taken up inside the
+  zone, so its cells deform more, and a zone too narrow for the change is
+  refused (`ZoneError`, or the gate). The zone is measured on the input
+  grid.
 - **Fixed upstream after fault-projections 0.4.0** (pinned revision):
   - `adapt_grid` and `adapt_deck` default to `polish="auto"`: when the
     morph leaves an active column with a scaled Jacobian below 0.05 and

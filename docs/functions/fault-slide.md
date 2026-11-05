@@ -21,8 +21,21 @@ slide_grid(
     max_bisect: int = 20,
     report: bool = True,     # re-process the grid and fill the report
     tol: float = 0.0,
+    min_jacobian: float | None = 0.05,  # 3-D cell-shape floor of the gate; None skips it
+    zone=None,               # None: the whole grid may move; D, (D_fw, D_hw) or a FaultZone
 ) -> SlideResult
 ```
+
+- **`min_jacobian`.** Corners slide along their pillars, so on leaning
+  pillars a throw also moves them sideways. The gate checks every cell's 3-D
+  scaled Jacobian (`quality.hex_check`). A cell fails if it turns inside out,
+  or if its worst value drops below the floor and below what it was.
+- **`zone`.** It keeps the slide inside the cells within a distance of the
+  slid faults ([Fault zones](fault-zone.md)). A ZCORN corner moves only when
+  every cell sharing it is in the zone. Its shift fades with a cosine from
+  full on the fault to zero at the nearest frozen corner. Every cell outside
+  the zone keeps its corners bit for bit. A zone that freezes a corner on the
+  fault raises `ZoneError`. `SlideResult.zone` holds the zone used.
 
 `Throw(fault, throw, hanging_side=None, hanging=1.0, profile="cosine",
 taper=None, decay="auto", growth=None, snap=False, name="", layers=None)`
@@ -145,13 +158,18 @@ installed, cases B and C also write a PNG.
   `on_invalid="bisect"` or `"ignore"`.
 - On tilted pillars, cells next to a moved pillar change volume by the fault
   wedge; `volume_change` reports it.
+- With `zone=`, the throw must fade to zero inside the zone. A narrow zone
+  around a large throw squeezes the cells between the fault and the zone's
+  edge, and the gate may refuse it (lesson 33 J).
 - A fault that ends inside the grid fades by a distance kernel or a harmonic
   solve, not by a geomechanical model.
 
 ## Source and tests
 
-- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/75f6dd28e8d6fd3df0d866c71ca2849505e0c5f5/fault_projections/slide.py)
-  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/75f6dd28e8d6fd3df0d866c71ca2849505e0c5f5/tests/test_slide.py)
+- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/48dd1ece3614b875c524e9a6a6bbefac99ddf5d7/fault_projections/slide.py)
+  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/48dd1ece3614b875c524e9a6a6bbefac99ddf5d7/tests/test_slide.py)
 - [`zcorn_ops`](https://github.com/arturcastiel/cpg2python/blob/7d98aebbd64b03ee4623cf0c97e01dd19cda9f5b/cpg2unstructured/zcorn_ops.py)
 - Lessons 19–30 ([Z slide](../learn/z-slide.md), [gallery](../learn/gallery.md));
-  lesson 31 I slides a dipped fault ([fault dip](../learn/fault-dip.md))
+  lesson 31 I slides a dipped fault ([fault dip](../learn/fault-dip.md));
+  lesson 33 H and I confine a slide to a fault zone
+  ([fault zones](../learn/fault-zone.md))
