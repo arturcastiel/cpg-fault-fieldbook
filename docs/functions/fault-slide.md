@@ -3,7 +3,8 @@
 A fault slide gives existing `FAULTS` a throw by editing ZCORN only. Every
 corner moves along its own pillar, so COORD never changes and only faces listed
 in `FAULTS` open. `fault_projections.slide` decides the shifts;
-`cpg2unstructured.zcorn_ops` applies and checks them.
+`cpg2unstructured.zcorn_ops` applies and checks them. To change a fault's
+angle first (COORD only), see [Fault dip](fault-dip.md).
 
 ## `slide_grid`
 
@@ -24,7 +25,8 @@ slide_grid(
 ```
 
 `Throw(fault, throw, hanging_side=None, hanging=1.0, profile="cosine",
-taper=None, decay="auto", growth=None, snap=False, name="")` describes one fault:
+taper=None, decay="auto", growth=None, snap=False, name="", layers=None)`
+describes one fault:
 
 | Field | Meaning |
 |---|---|
@@ -35,6 +37,7 @@ taper=None, decay="auto", growth=None, snap=False, name="")` describes one fault
 | `decay` | `"auto"`: a fault that separates the grid slides a block rigidly; one that ends inside the grid fades with distance |
 | `growth` | `NZ + 1` factors, one per horizon: a growth fault (layers change thickness) |
 | `snap` | Lower the throw at pillars so layer boundaries never cross inside a face |
+| `layers` | `(k1, k2)`, 1-based and inclusive: the layers a **blind** fault cuts. Layers outside stay welded across the faces; the throw falls to zero at the tip horizons with a cosine profile in depth, and the hanging-wall layers there change thickness to absorb it. `None`: every layer |
 
 Several throws add up: sliding two faults at once gives the same grid as
 sliding them one after the other.
@@ -44,7 +47,11 @@ sliding them one after the other.
 `grid` is the slid grid and `before` the input. `ok` is True when no cell
 inverted, no layers overlap, no face outside `FAULTS` opened (`unexpected`) and
 the grid re-processes. `modes` gives `"rigid"`, `"decay"` or `"block"` per fault;
-`realized_throw(name)` the throw along the chain; `scale` the fraction of the
+`realized_throw(name, horizon=0)` the throw along the chain at a horizon
+(0 is the top of layer 1, `k` the base of layer `k`, `NZ` the base of the grid);
+`peak_horizon(name)` the horizon where a blind fault's throw peaks (0 for a
+fault that cuts every layer; the report and the slide PNG read the throw
+there); `layers` the K range per blind fault; `scale` the fraction of the
 throws applied after bisection. With `report=True`, `juxtaposition`,
 `connections` (cell pairs across faults, with areas) and `volume_change` are
 filled. `summary()` gives one line, `report()` a full text report.
@@ -73,6 +80,25 @@ print(res.summary())
 
 This snippet was run against the pinned revisions.
 
+A blind fault cuts only some layers. On the same layout with four 10 m
+layers, only layers 2–3 are cut:
+
+```python
+res = slide_grid(grid, Throw(f1, 6.0, hanging_side=(500.0, 200.0), layers=(2, 3), name="F1"))
+print(res.summary())
+# OK: 1 fault(s) slid (F1 rigid) · 4 face(s) opened · max |volume change| 60 %
+print([round(float(res.realized_throw("F1", horizon=k)[0, 1]), 3) for k in range(nz + 1)])
+# [0.0, 0.0, 6.0, 0.0, 0.0]
+print(res.peak_horizon("F1"))
+# 2
+```
+
+Here `nz = 4` and the pillars run from 0 to 40 m. The throw is 6 m at
+horizon 2, between the two cut layers, and zero at horizons 1 and 3, where
+the fault dies out. In the hanging wall, layer 2 thickens from 10 m to 16 m
+and layer 3 thins from 10 m to 4 m. That is the 60 % volume change: a blind
+fault's throw is absorbed by the layers it cuts.
+
 ## `slide_deck`
 
 ```python
@@ -84,7 +110,11 @@ Reads a deck, slides it and writes `<prefix>_grid.grdecl` (COORD, ZCORN,
 ACTNUM) and `<prefix>_report.txt`. `faults` defaults to the deck's own `FAULTS`
 (INCLUDE is followed), so a throw can name a fault: `Throw("F1", 20.0)`. The
 `FAULTS` set does not change, so replace the grid in the deck with
-`INCLUDE '<prefix>_grid.grdecl' /`. `png=True` also writes `<prefix>_slide.png`:
+`INCLUDE '<prefix>_grid.grdecl' /`. A fault whose `FAULTS` records cut only
+some layers (a K range other than `1..NZ`) slides as a blind fault: the K
+range becomes `Throw.layers`, unless the throw sets it. Earlier versions slid
+every layer. A K range that varies along the fault warns and uses its hull.
+Sliding a fault whose faces are all `Z` raises `SlideError`. `png=True` also writes `<prefix>_slide.png`:
 a plan map of the top shift with the fault chains, and the realized throw
 along each fault (`viz.plot_slide(res)`, `write_slide_png(res, path)`; needs
 matplotlib).
@@ -120,7 +150,8 @@ installed, cases B and C also write a PNG.
 
 ## Source and tests
 
-- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/fault_projections/slide.py)
-  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/247507e70be854bbc18d6b02c27efeb59f998149/tests/test_slide.py)
+- [`slide_grid`, `slide_deck`, `Throw`, `SlideResult`](https://github.com/arturcastiel/fault-projections/blob/75f6dd28e8d6fd3df0d866c71ca2849505e0c5f5/fault_projections/slide.py)
+  · [Slide tests](https://github.com/arturcastiel/fault-projections/blob/75f6dd28e8d6fd3df0d866c71ca2849505e0c5f5/tests/test_slide.py)
 - [`zcorn_ops`](https://github.com/arturcastiel/cpg2python/blob/7d98aebbd64b03ee4623cf0c97e01dd19cda9f5b/cpg2unstructured/zcorn_ops.py)
-- Lessons 19–30 ([Z slide](../learn/z-slide.md), [gallery](../learn/gallery.md))
+- Lessons 19–30 ([Z slide](../learn/z-slide.md), [gallery](../learn/gallery.md));
+  lesson 31 I slides a dipped fault ([fault dip](../learn/fault-dip.md))

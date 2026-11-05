@@ -35,7 +35,9 @@
     stay vertical. Lesson 21 leans the hanging-wall pillars first,
     then adapts with a 2D trace (stage 1 keeps the lean). With
     `boundary="slide"` the rim pillars can tilt: lesson 30 C adapts a
-    rim-to-rim 65° polygon with `top_trace="auto"`.
+    rim-to-rim 65° polygon with `top_trace="auto"`. To set the angle of
+    a fault that is already in `FAULTS`, use `dip_grid` (lesson 31): it
+    leans the pillars, rim included, without adapting.
   - Slides across K faces are not covered: k-direction faults still
     raise `NonMatchingZError`.
 - **Slide gallery (lessons 23–29):** the helper `fieldbook/zslide.py`
@@ -71,6 +73,31 @@
   for a trace through inactive columns (an L-shaped active region): only
   faces with active cells on both sides are compared. `slide_deck(png=True)`
   writes a figure.
-- **Still open upstream:**
-  - Without the barrier polish, the minimum scaled Jacobian can fall
-    to about 2e-4.
+- **Fault dip (lesson 31):** `fault_projections.dip_grid` changes COORD
+  only.
+  - A rigid hanging wall leans entirely, including the grid rim and any
+    blocks beyond other faults (case A, graben case G). A `decay` distance
+    keeps rims vertical.
+  - Cell volumes are not conserved one by one. A rigid hanging wall
+    keeps them (1e-14); footwall and fade-zone cells change (case A: up
+    to 21.65 %; the tipped fault of case D: up to 29.4 %). The middle
+    pivot keeps column totals only.
+  - Bisection (`on_invalid="bisect"`) keeps the grid valid but misses
+    the angle (case H: 45° for 35° requested).
+  - **Field result (case J, Norne):** E_01 → 60° passes. BC → 70° fails
+    the gate with the default middle pivot, even with the fades widened
+    ×16: its present dip jumps from 59° to 84° within four pillars, and
+    one top-layer cell folds. `pivot="top"` and 65° pass. A smarter
+    spread for faults with sharply varying dip is not implemented.
+- **Fixed upstream after fault-projections 0.4.0** (pinned revision):
+  - `adapt_grid` and `adapt_deck` default to `polish="auto"`: when the
+    morph leaves an active column with a scaled Jacobian below 0.05 and
+    below half its old value, the barrier polish runs. On upstream's
+    65° stage-2 test polygon (24 × 16 × 4 cells, `top_trace="auto"`,
+    `boundary="slide"`), the minimum scaled Jacobian is 3.7e-4 with
+    `polish="none"` and 0.277 with the default. `polish="none"` restores
+    the old results.
+  - `surface_top_trace` follows the longest path of the points' minimum
+    spanning tree, so U-shaped and hooked faults no longer fold.
+  - `Throw.layers=(k1, k2)` slides a blind fault; `slide_deck` reads it
+    from the `FAULTS` K range (earlier versions slid every layer).
