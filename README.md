@@ -60,12 +60,16 @@ results. Add `--out DIR` to keep the decks it writes.
 | 28 | `gallery_regridding` | **Gallery:** fault transfer, resolution, solver settings, ACTNUM, damage zone |
 | 29 | `gallery_export_workflows` | **Gallery:** simulator bundle, `adapt_deck`, VTK series, round trip |
 | 30 | `deck_slide_workflows` | **Decks:** `adapt_deck(slide=...)` in one call; slide Norne's FAULTS (`--deck`, `--throw`); a dipping fault in one call (`top_trace="auto"`) |
+| 31 | `fault_dip` | **Fault dip:** set a fault's angle by tilting pillars (COORD only): rigid vs decay, pivots, a tip, an angle table, a stair-stepped fault, a graben, the validity gate, `dip_deck(slide=...)`, and Norne (one pass, one honest failure) |
 
 Lessons 23-30 share [`fieldbook/zslide.py`](fieldbook/zslide.py), which
 slides faults with `fault_projections.slide_grid` and adds the lessons'
 independent checks. The
 [Z-slide page](docs/learn/z-slide.md) and the
 [gallery page](docs/learn/gallery.md) explain every case with figures.
+Lesson 31 calls `fault_projections.dip_grid` and re-checks every result
+from COORD, a re-processed topology or the bytes on disk; the
+[fault-dip page](docs/learn/fault-dip.md) lists what each case must print.
 
 ![Structural styles gallery](docs/assets/gallery/structural-styles.png)
 
@@ -78,6 +82,13 @@ into `output/figures/`:
 .venv/bin/python -m pip install -e ".[figures]"
 .venv/bin/python tools/figures/make_figures.py              # all, about 15 min
 .venv/bin/python tools/figures/make_figures.py --only 07 10 # some
+```
+
+The fault-dip figures in `docs/assets/fault-dip/` come from lesson 31
+(about 30 s, needs matplotlib):
+
+```bash
+.venv/bin/python tools/figures/fault_dip.py
 ```
 
 ## Documentation

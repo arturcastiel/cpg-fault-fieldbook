@@ -18,7 +18,7 @@ adapt_grid(
     taper_cells: float = 3.0,
     slide_rim_ends: bool = False,
     top_trace=None,
-    **morph_kw,
+    **morph_kw,          # to morph_pillars; polish="auto" unless given
 ) -> AdaptResult
 ```
 
@@ -37,7 +37,18 @@ trace on the top surface, or `"auto"` to derive it with
 `surface_top_trace(grid, surface)`. Stage 1 snaps a pillar chain to the trace
 and reads the FAULTS off it; stage 2 then tilts the pillars into the fault.
 `result.stage1` is the trace stage alone, and `result.top_trace` the trace
-used. Lesson 25 B–D and lesson 30 C use it.
+used. Lesson 25 B–D and lesson 30 C use it. `surface_top_trace` orders the
+points along the longest path of their minimum spanning tree, so a fault that
+curves by more than 180° (a U or a hook) gives one unfolded trace.
+
+`polish` defaults to `"auto"` here (`morph_pillars` itself defaults to
+`"none"`). The morph runs unpolished first. It is re-run with
+`polish="barrier"` only if an active column ends with a scaled Jacobian below
+`AUTO_POLISH_BELOW` (0.05) **and** below half of what it had before; the
+polished grid is kept only when it is valid and better. A dipping fault's
+stage 2 otherwise ends near 1e-4. On upstream's 65° stage-2 test polygon, the
+minimum is 3.7e-4 with `polish="none"` and 0.277 with `"auto"`. Pass
+`polish="none"` for the 0.4.0 results, or `"barrier"` to always polish.
 
 `morph_kw` is forwarded to `morph_pillars` (for example, `boundary`,
 `smoothness`, `support_rings`, and validity options). `taper_cells` applies to
@@ -57,8 +68,11 @@ count as a change: there, re-projection walks round the hole while the chain
 runs through it. `grid_path` and `faults_path` are unset for in-memory
 adaptation.
 
-`ok` forwards the morph validity result. `summary()` reports distance changes,
-morph details, and fault-face invariance when available. It does not check
+`ok` forwards the morph validity result. `min_jacobian` is the worst scaled
+Jacobian of any active column, top or bottom plane (1 is a rectangle, 0 a
+collapsed corner); `fault_projections.adapt.min_jacobian(grid)` measures any
+grid. `summary()` reports distance changes, morph details, the minimum scaled
+Jacobian (flagged `LOW` below 0.05), and fault-face invariance when available. It does not check
 cell-corridor containment or certify the deck for a simulator.
 
 ### Source-based usage
@@ -99,7 +113,7 @@ adapt_deck(
     slide=None,
     slide_options=None,
     top_trace=None,
-    **morph_kw,
+    **morph_kw,          # to morph_pillars; polish="auto" unless given
 ) -> AdaptResult
 ```
 

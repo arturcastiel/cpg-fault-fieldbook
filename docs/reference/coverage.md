@@ -20,6 +20,8 @@ export drift.
 | EGRID/MAPAXES | Reader reference | 02_egrid, 17_mapaxes_guard | Bundled upstream reader fixture; no simulator round trip |
 | ZCORN-only Z slide | `cpg2unstructured.zcorn_ops`, `fault_projections.slide_grid`; lessons 19–22 edit the corner cube directly | 19_z_slide_sequential, 20_z_slide_partial_fault, 21_z_slide_oblique_fault, 22_z_slide_throw_control | Synthetic only |
 | Slide gallery | `fieldbook/zslide.py` over `fault_projections.slide_grid` | 23–29 gallery lessons, 38 cases | Synthetic only; exercises `adapt_grid`, `adapt_deck`, stage-2 polygons, faceted and quad-mesh projection, `cell_corridor`, VTK writers |
+| Deck slide workflows | `slide_deck`, `adapt_deck(slide=...)` | 30_deck_slide_workflows | Synthetic, and Norne when present |
+| Fault dip (COORD only) | `fault_projections.Dip`, `dip_grid`, `dip_deck` | 31_fault_dip, 10 cases (A–J) | Synthetic; case J runs on Norne when present |
 | Shapefile and VTK plotting | Legacy description | None yet | Not verified end-to-end here |
 | Other root exports/types/errors | Legacy directory | Upstream tests only | Reference expansion pending |
 

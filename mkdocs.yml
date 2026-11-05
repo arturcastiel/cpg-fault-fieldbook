@@ -17,6 +17,7 @@ nav:
       - Validation and export: learn/validation.md
       - Slide a fault in Z: learn/z-slide.md
       - "Gallery: slides with meshing and regridding": learn/gallery.md
+      - "Set a fault's dip angle": learn/fault-dip.md
   - Methods:
       - Index: functions/index.md
       - Grid input: functions/grid-input.md
@@ -26,6 +27,7 @@ nav:
       - Adaptation: functions/adapt-grid.md
       - Surface projection: functions/surface-projection.md
       - Fault slide: functions/fault-slide.md
+      - Fault dip: functions/fault-dip.md
   - Decisions: decisions/settings.md
   - Cases:
       - Passing interior trace: cases/one-trace.md

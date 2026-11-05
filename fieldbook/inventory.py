@@ -31,6 +31,7 @@ PAGES = {
         "zcorn_cube", "with_zcorn", "apply_zcorn_displacement", "unwelded_faces",
         "zcorn_validity", "ZcornValidity", "write_slide_png",
     },
+    "fault-dip.md": {"Dip", "DipCheck", "DipError", "DipResult", "dip_grid", "dip_deck"},
 }
 
 

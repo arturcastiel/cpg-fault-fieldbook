@@ -129,7 +129,10 @@ The lesson runs the same slide on two decks with identical FAULTS:
 A stage-2 dipping polygon is not used here because `boundary="pinned"`
 keeps the rim pillars vertical, and this fault ends on the rim. With
 `boundary="slide"` and `top_trace="auto"`, lesson 30 C adapts and slides
-a rim-to-rim 65° polygon in one call.
+a rim-to-rim 65° polygon in one call. The lean here is written by hand to
+show the mechanics. `dip_grid` sets it as a library call: it leans the
+hanging wall to a chosen angle and fades the footwall smoothly
+([7. Set a fault's dip angle](fault-dip.md)).
 
 ![Oblique dipping fault, regular and adapted grids](../assets/z-slide/oblique-fault.png)
 
@@ -241,6 +244,8 @@ it gave wrong answers. Version 0.3.0 fixes three things:
 These five figures are snapshots: they compare 0.2.0 with 0.3.0, so
 they are not regenerated. The lesson figures above are; run
 `python tools/figures/make_figures.py` (see the README).
+
+Next: [set a fault's dip angle](fault-dip.md) before sliding it (lesson 31).
 
 The figures are drawn from the decks that `--out` writes. The plotted
 numbers are the ones the lessons print. All cases are synthetic layer

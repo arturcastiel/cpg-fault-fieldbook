@@ -15,6 +15,7 @@ clear; they have not been run as part of writing these pages.
 | [Grid adaptation](adapt-grid.md) | `adapt_grid`, `adapt_deck` | Run an end-to-end fault-driven adaptation |
 | [3-D surface projection](surface-projection.md) | `project_fault_surface`, `project_quad_mesh_surface` | Map planar or quad-mesh faults onto cell faces |
 | [Fault slide](fault-slide.md) | `slide_grid`, `slide_deck`, `zcorn_ops` | Give existing FAULTS a throw by editing ZCORN only |
+| [Fault dip](fault-dip.md) | `Dip`, `dip_grid`, `dip_deck` | Set the dip angle of existing FAULTS by tilting pillars (COORD only) |
 
 ## Reading these references
 

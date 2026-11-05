@@ -193,3 +193,6 @@ plan map of the top shift with the FAULTS, and a 3D view of the slid
 grid with the exposed fault faces in red. All cases are synthetic:
 nothing here checks simulator acceptance or flow. See also the
 [known limits](../reference/limits.md).
+
+Next: [7. Set a fault's dip angle](fault-dip.md), with ten cases you can
+check from the COORD numbers.

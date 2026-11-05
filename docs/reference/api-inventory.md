@@ -114,6 +114,10 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `AdaptResult` | yes | [adapt-grid](../functions/adapt-grid.md) |
 | `fault_projections` | `Connection` | yes | [fault-slide](../functions/fault-slide.md) |
 | `fault_projections` | `DegenerateQuadError` | yes | Directory only |
+| `fault_projections` | `Dip` | yes | [fault-dip](../functions/fault-dip.md) |
+| `fault_projections` | `DipCheck` | yes | [fault-dip](../functions/fault-dip.md) |
+| `fault_projections` | `DipError` | yes | [fault-dip](../functions/fault-dip.md) |
+| `fault_projections` | `DipResult` | yes | [fault-dip](../functions/fault-dip.md) |
 | `fault_projections` | `DisconnectedMeshError` | yes | Directory only |
 | `fault_projections` | `FaultChain` | yes | Directory only |
 | `fault_projections` | `FaultFace` | yes | Directory only |
@@ -140,6 +144,8 @@ when changing `upstream-lock.toml`.
 | `fault_projections` | `as_polylines` | yes | Directory only |
 | `fault_projections` | `build_projected_graph` | yes | Directory only |
 | `fault_projections` | `closest_point_on_segment` | yes | Directory only |
+| `fault_projections` | `dip_deck` | yes | [fault-dip](../functions/fault-dip.md) |
+| `fault_projections` | `dip_grid` | yes | [fault-dip](../functions/fault-dip.md) |
 | `fault_projections` | `edge_face` | yes | Directory only |
 | `fault_projections` | `face_edge` | yes | Directory only |
 | `fault_projections` | `facet_surface` | yes | Directory only |
