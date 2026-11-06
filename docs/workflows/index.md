@@ -15,7 +15,7 @@ what should move?
 | # | Workflow | Changes | Use it when | Lessons |
 | --- | --- | --- | --- | --- |
 | 1 | [Stair-step projection](stair-step.md) | FAULTS only | you have a map trace and the grid must not move | 03, 04, 28 |
-| 2 | [Full 3D projection](full-3d.md) | FAULTS only (X, Y and Z faces) | you have a 3D surface: a polygon, facets or a quad mesh | 05, 13, 25 |
+| 2 | [Full 3D projection](full-3d.md) | FAULTS only (X, Y and Z faces) | you have a 3D surface: a polygon, facets or a quad mesh (to slide a dipping one, use 5) | 05, 13, 25 |
 | 3 | [2D / 2.5D deformation](deformation.md) | COORD (+ regenerated FAULTS) | the grid should follow the fault: in plan, or tilted into it | 06–12, 16, 30 C |
 | 4 | [Fault slide](slide.md) | ZCORN only | the layers should be offset across a fault (the throw) | 19–22, 23–29 |
 | 5 | [Slide + pillar shift](slide-pillars.md) | COORD, then ZCORN | the pillars should move and the layers slide along them | 21 B, 30 A, 30 C, 31 I |

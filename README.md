@@ -34,7 +34,7 @@ the grid before and after, and links to the lessons and sections to read.
 | # | Workflow | Changes | Use it when |
 | --- | --- | --- | --- |
 | 1 | [Stair-step projection](docs/workflows/stair-step.md) | `FAULTS` only | the grid must not move; the fault follows cell edges |
-| 2 | [Full 3D projection](docs/workflows/full-3d.md) | `FAULTS` (X, Y, Z faces) | a dipping surface onto 3D cell faces, with real K ranges |
+| 2 | [Full 3D projection](docs/workflows/full-3d.md) | `FAULTS` (X, Y, Z faces) | a dipping surface onto 3D cell faces, with real K ranges; marks faces only, so to slide a dipping fault use 5 ([why](docs/workflows/full-3d.md#can-i-slide-it-afterwards-not-the-staircase)) |
 | 3 | [2D / 2.5D deformation](docs/workflows/deformation.md) | `COORD` | the grid should follow a trace, or tilt into a dipping plane |
 | 4 | [Fault slide](docs/workflows/slide.md) | `ZCORN` | offset the layers across existing `FAULTS` |
 | 5 | [Slide + pillar shift](docs/workflows/slide-pillars.md) | `COORD` + `ZCORN` | a dip-slip: move the pillars, then slide along them |

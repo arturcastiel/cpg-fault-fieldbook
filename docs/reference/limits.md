@@ -10,6 +10,14 @@
   adapts the grid only and **does not output regenerated FAULTS**.
 - **3D input:** dipping polygons/facets produce independent top/bottom
   targets, but `adapt_grid` does not regenerate FAULTS for them.
+- **Sliding a 3D projection:** the staircase that `project_fault_surface`
+  gives a dipping fault cannot be slid. A slide moves corners along their
+  pillars and takes column faces over one K range; `slide_deck` drops the
+  Z steps, sees parallel lines and raises `SlideError`. Move the pillars
+  onto the fault first (`adapt_grid(top_trace="auto")` or `dip_grid`, then
+  slide: workflow 5). A vertical fault projected in 3D slides (its K range
+  becomes `Throw.layers`). A horizontal fault (Z faces only) can be neither
+  slid nor dipped: pillars cannot be offset across it.
 - **Near-flat cells:** validity alone allows a low scaled Jacobian;
   add a project-specific floor and inspect both planes.
 - **Deck semantics:** generating an INCLUDE does not rewrite or
