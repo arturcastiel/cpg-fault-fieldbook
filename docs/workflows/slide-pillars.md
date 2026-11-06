@@ -11,6 +11,10 @@ There are two ways to move the pillars:
 Either way the slide runs **after** the pillars move, in the same
 call.
 
+Have a dipping surface from [workflow 2](full-3d.md)? Its 3D
+staircase cannot be slid; route A takes the same polygon
+([why](full-3d.md#can-i-slide-it-afterwards-not-the-staircase)).
+
 ![Workflow 5: slide plus pillar shift, fit or tilt the pillars, then slide along them](../assets/workflows/flow-5-slide-pillars.png)
 
 ## Steps

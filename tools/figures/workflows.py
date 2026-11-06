@@ -18,6 +18,7 @@ import sys
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
@@ -227,7 +228,8 @@ def chooser(out):
         B("w1", "end", 0.0, 3.5, "1 · Stair-step projection",
           ref="map trace → FAULTS through all layers\ngrid unchanged"),
         B("w2", "end", 1.0, 3.5, "2 · Full 3D projection",
-          ref="3D surface → X, Y and Z faces\nwith real K ranges; grid unchanged"),
+          ref="3D surface → X, Y and Z faces\nwith real K ranges; grid unchanged;\n"
+              "to slide a dipping fault: 5"),
         B("w7", "end", 2.05, 3.5, "7 · Fault zones",
           ref="the cells within ±D of a fault;\noptionally keep 4, 5, 6 inside them"),
         B("w3", "end", 3.1, 3.5, "3 · 2D / 2.5D deformation",
@@ -313,8 +315,9 @@ def flow_2(out):
         B("o", "end", 1.0, 5.1, "3D FAULTS",
           "write_faults_3d(path, {\"F1\": surface}, mesh)", "faults_text_3d returns the text"),
         B("n", "check", 2.55, 4.6, "The grid is unchanged",
-          ref="a dipping fault is a staircase in depth too;\nto make cells follow it, use "
-              "workflow 3 (stage 2)\nor 6 (dip angle)"),
+          ref="a dipping fault is a staircase in depth too.\nTo make cells follow it: "
+              "workflow 3 (stage 2)\nor 6 (dip angle). The staircase cannot be slid\n"
+              "(SlideError); to slide the fault: workflow 5"),
     ]
     edges = [E("g", "d"), E("d", "a", "planar", via=2.05), E("d", "b", "curved", via=2.05),
              E("d", "c", "a mesh", via=2.05),
@@ -690,9 +693,12 @@ def save(fig, path, title):
 
 def compute():
     """Run every case once; the per-workflow figures and the overview draw from this."""
-    from cpg2unstructured import build_topology, check_validity, from_grdecl, pillar_lattice
-    from fault_projections import (Dip, Throw, adapt_grid, dip_grid, fault_faces_for,
-                                   fault_zone, project_fault_surface, slide_grid)
+    from cpg2unstructured import (build_topology, check_validity, from_grdecl, pillar_lattice,
+                                  write_grid_include)
+    from fault_projections import (Dip, SlideError, Throw, adapt_grid, dip_grid,
+                                   fault_faces_for, fault_zone, faults_text_3d,
+                                   project_fault_surface, slide_deck, slide_grid)
+    from fault_projections.from_faults import faults_from_deck
 
     grid = cake()
     r = {"grid": grid}
@@ -718,6 +724,47 @@ def compute():
     flat = fault_faces_for(grid, [np.array([[x_top, -10.0], [x_top, NY * DX + 10]])])
     r.update(plane3d=((xa, TOP - 5), (xb, TOP + 95)), surf=surf, flat=flat,
              surf_counts=np.bincount(surf.direction, minlength=3))
+    # 2, the limit: a 3D staircase cannot be slid; dip the pillars, then slide (workflow 6)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        d45 = dip_grid(grid, Dip(x_fault(8), 45.0, hanging_side=EAST, name="F"),
+                       slide=Throw(x_fault(8), 15.0, hanging_side=EAST, name="F"))
+    assert d45.ok and d45.slide is not None and d45.slide.ok
+    x0, _, z0, x1, _, z1 = np.asarray(d45.grid.coord, float).reshape(NY + 1, NX + 1, 6)[ROW, 8]
+    ext = 5.0 / (z1 - z0)                                # reach 5 m past the top and base
+    xa45, za45 = x0 - ext * (x1 - x0), z0 - 5.0
+    xb45, zb45 = x1 + ext * (x1 - x0), z1 + 5.0
+    poly45 = np.array([[xa45, -10.0, za45], [xa45, NY * DX + 10, za45],
+                       [xb45, NY * DX + 10, zb45], [xb45, -10.0, zb45]])
+    surf45 = project_fault_surface(poly45, mesh)
+    with TemporaryDirectory() as tmp:
+        deck = Path(tmp) / "deck.grdecl"
+        write_grid_include(grid, deck, header="workflows: full 3D, then slide")
+        with open(deck, "a") as fh:
+            fh.write("\n" + faults_text_3d({"F": surf45}, mesh))
+        seen = sorted({f.i for f in faults_from_deck(deck)["F"]})
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                slide_deck(deck, Throw("F", 15.0, hanging_side=EAST), Path(tmp) / "out")
+            refused = None
+        except SlideError as exc:
+            refused = str(exc)
+    assert refused is not None and len(seen) > 1
+    poly45a = np.array([[xa45, -2000.0, za45], [xa45, 2000.0, za45], [xb45, 2000.0, zb45],
+                        [xb45, -2000.0, zb45]])
+    a45 = adapt_grid(grid, poly45a, top_trace="auto", boundary="slide", w0=0.05,
+                     polish="barrier", on_invalid="raise")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        a45s = slide_grid(a45.grid, Throw(a45.faults_after, 15.0, hanging_side=EAST, name="F"))
+    assert a45.ok and a45s.ok and not a45s.unexpected
+    r.update(plane45=((xa45, za45), (xb45, zb45)), surf45=surf45, dip45=d45,
+             surf45_counts=np.bincount(surf45.direction, minlength=3), seen45=seen,
+             refused45=refused, throw45=float(np.nanmedian(d45.slide.realized_throw("F")[:, 1])),
+             adapt45=a45, adapt45_slid=a45s,
+             adapt45_lines=sorted({f.i for f in a45.faults_after if f.face == "X"}),
+             adapt45_throw=float(np.nanmedian(a45s.realized_throw("F")[:, 1])))
     # 3 stage 2: an interior dipping plane, top x = 300, base x = 380
     poly2 = np.array([[300.0, 40.0, TOP - 5], [300.0, 360.0, TOP - 5],
                       [380.0, 360.0, TOP + 95], [380.0, 40.0, TOP + 95]])
@@ -799,6 +846,29 @@ def illustrations(out, r):
             "the staircase follows the dip", faces3d=r["surf"], plane=r["plane3d"])
     save(fig, out / "ill-2-full-3d.png", "2 · Full 3D projection: the grid is unchanged, "
          "only the chosen faces differ")
+    # 2, the limit: staircase vs dip + slide
+    fig, axs = plt.subplots(4, 1, figsize=(9.0, 10.0), layout="constrained")
+    n = r["surf45_counts"]
+    section(axs[0], g, f"3D projection of a 45 deg plane (dashed): {n[0]} X + {n[2]} Z faces; "
+            "the grid is unchanged", faces3d=r["surf45"], plane=r["plane45"])
+    seen = r["seen45"]
+    section(axs[1], g, f"slide_deck on that FAULTS: Z faces dropped, the X faces become "
+            f"{len(seen)} full-height lines\n(i = {', '.join(map(str, seen))}): SlideError, "
+            "no grid written", pillars=seen, plane=r["plane45"])
+    axs[1].text(0.985, 0.08, "REFUSED", transform=axs[1].transAxes, ha="right",
+                fontsize=13, weight="bold", color=RED,
+                bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=RED, lw=1.2))
+    lines, a45s = r["adapt45_lines"], r["adapt45_slid"]
+    section(axs[2], a45s.grid, f"workflow 5 A: adapt_grid(polygon, top_trace=\"auto\") + "
+            f"slide_grid(Throw 15):\nthe pillars fitted to the plane "
+            f"({angle_of(a45s.grid, lines[0]):.1f} deg), throw {r['adapt45_throw']:.1f} m",
+            pillars=lines, plane=r["plane45"])
+    d45 = r["dip45"]
+    section(axs[3], d45.slide.grid, f"workflow 5 B / 6: dip_grid(Dip 45, slide=Throw 15): "
+            f"{angle_of(d45.slide.grid):.1f} deg, throw {r['throw45']:.1f} m,\nthe hanging "
+            "wall slides along the tilted pillars", pillars=[8], plane=r["plane45"])
+    save(fig, out / "ill-2-slide-limit.png", "2 · Limit: a 3D staircase cannot be slid; "
+         "move the pillars onto the fault, then slide")
     # 3 deformation
     fig = plt.figure(figsize=(12.5, 5.5), layout="constrained")
     gs = fig.add_gridspec(2, 2, height_ratios=[3.2, 1.45])

@@ -92,7 +92,9 @@ Method page: [Fault slides](../functions/fault-slide.md).
 
 - A slide moves corners along their pillars. It does not move
   pillars, so a vertical fault stays vertical. To slide along a
-  dipping fault, tilt it first ([workflow 5](slide-pillars.md)).
+  dipping fault, tilt it first ([workflow 5](slide-pillars.md)). The
+  3D staircase of a dipping fault from [workflow 2](full-3d.md) is
+  refused (`SlideError`).
 - `hanging_side=None` reads the side from the pillar dip, so a
   vertical fault needs it.
 - The faces that open are the `FAULTS` faces; a face opening anywhere
