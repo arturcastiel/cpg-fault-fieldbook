@@ -1,0 +1,7 @@
+# Grid decks and fixtures are hashed byte for byte (tests/test_fixtures.py):
+# never convert their line endings on checkout (Windows runners use autocrlf).
+*.grdecl -text
+*.GRDECL -text
+*.EGRID binary
+*.egrid binary
+fieldbook/data/** -text

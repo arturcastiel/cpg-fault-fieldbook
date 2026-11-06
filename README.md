@@ -210,10 +210,20 @@ that example inclusions and links resolve. The
 An example passing on the bundled fixture does **not** qualify an arbitrary
 field deck; see the [opt-in data guide](docs/reference/data.md).
 
-**CI.** `fault-projections` is private, so the workflow needs the secret
-`FAULT_PROJECTIONS_TOKEN` (a fine-grained token, *Contents: read-only* on
-`arturcastiel/fault-projections`):
-`gh secret set FAULT_PROJECTIONS_TOKEN -R arturcastiel/cpg-fault-fieldbook`.
+**CI.** `fault-projections` is private, so the workflow needs read-only
+access to it. It uses a read-only deploy key on `arturcastiel/fault-projections`
+whose private half is the secret `FAULT_PROJECTIONS_DEPLOY_KEY`:
+
+```bash
+ssh-keygen -t ed25519 -N "" -f fp_ci
+gh repo deploy-key add fp_ci.pub -R arturcastiel/fault-projections --title "cpg-fault-fieldbook CI (read-only)"
+gh secret set FAULT_PROJECTIONS_DEPLOY_KEY -R arturcastiel/cpg-fault-fieldbook < fp_ci
+rm fp_ci fp_ci.pub
+```
+
+A fine-grained token (*Contents: read-only* on that repository) in the secret
+`FAULT_PROJECTIONS_TOKEN` works too. Pull requests from forks get neither
+secret, so their checks cannot install `fault-projections`.
 
 ## Licensing and data
 
