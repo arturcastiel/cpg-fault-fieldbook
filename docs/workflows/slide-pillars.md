@@ -104,5 +104,7 @@ Source: [examples/](https://github.com/arturcastiel/cpg-fault-fieldbook/tree/mai
   grid in `result.grid`.
 - `boundary="pinned"` keeps rim pillars vertical, so a plane that
   reaches the rim needs `boundary="slide"` (lesson 21).
+- Starting from a 3D surface rather than a trace or `FAULTS`: do not
+  slide its 3D staircase; [workflow 9](slide-3d.md) picks the route.
 - See [What a dip does not do](../learn/fault-dip.md#what-a-dip-does-not-do)
   and [Limits](../reference/limits.md).

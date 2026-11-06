@@ -64,7 +64,8 @@ as parallel full-height lines, and refuses with `SlideError`. It
 writes nothing.
 
 To slide a dipping fault, first move the pillars onto it, then slide
-along them ([workflow 5](slide-pillars.md)):
+along them ([workflow 9](slide-3d.md) starts from the surface;
+[workflow 5](slide-pillars.md) explains the two routes):
 
 - **A.** fit the pillars to the same polygon:
   `adapt_grid(grid, polygon, top_trace="auto")`, then `slide_grid`;
@@ -74,8 +75,8 @@ along them ([workflow 5](slide-pillars.md)):
 
 ![A 45 degree staircase is refused by the slide; workflow 5 A and B slide the same fault along moved pillars](../assets/workflows/ill-2-slide-limit.png)
 
-Measured on the same grid, with a 45° plane through x = 350 m at the
-top and x = 450 m at the base:
+Measured on the same grid, with a 45° plane through x = 355 m at the
+top and x = 445 m at the base:
 
 | | Result |
 | --- | --- |
@@ -96,6 +97,9 @@ Two cases differ:
   both refuse it with an error. Pillars run unbroken from top to
   base, so a corner-point grid cannot offset cells across a
   horizontal surface. Its 3D `FAULTS` still mark the faces for flow.
+
+All three cases, from the surface to a slid grid, are
+[workflow 9](slide-3d.md).
 
 Shallow dips run out of room: with the default fixed outline, 15° is
 refused where 30° passes
@@ -124,8 +128,13 @@ Method page: [Surface projection](../functions/surface-projection.md).
 - The staircase of a dipping fault cannot be slid (`SlideError`). To
   slide the fault, move the pillars onto it first
   ([above](#can-i-slide-it-afterwards-not-the-staircase),
-  [workflow 5](slide-pillars.md)).
+  [workflow 9](slide-3d.md)).
 - Independently projected quads can tear at a seam; a `QuadMesh`
   with shared vertices avoids it
   ([Surface projection](../functions/surface-projection.md#project_quad_mesh_surface)).
 - See [Limits](../reference/limits.md).
+
+## Next
+
+- Slide the fault: [workflow 9](slide-3d.md).
+- Make the cells follow it without a slide: [workflow 6](dip-angle.md).

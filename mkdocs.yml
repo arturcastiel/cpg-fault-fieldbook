@@ -20,6 +20,7 @@ nav:
       - "6 · Set a fault's dip angle": workflows/dip-angle.md
       - 7 · Fault zones: workflows/fault-zones.md
       - 8 · A field deck, end to end: workflows/field-deck.md
+      - 9 · Slide a 3D fault surface: workflows/slide-3d.md
   - Learn:
       - Grid and topology: learn/grids.md
       - Fault projection: learn/faults.md

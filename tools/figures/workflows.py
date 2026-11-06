@@ -6,6 +6,8 @@ Writes PNGs under ASSETS_DIR/workflows (by default docs/assets/workflows):
 
 - chooser.png and flow-N-*.png: flowcharts. Each box names the call to make and the lesson
   that runs it. They are drawn, not computed.
+- concepts.png and why-pillars.png: SCHEMATICS, drawn by hand in code: one idea per panel,
+  not a grid any call returned.
 - ill-N-*.png and at-a-glance.png: BEFORE / AFTER illustrations COMPUTED with the libraries
   on one synthetic layer cake (16 x 8 columns of 50 m, six 15 m layers, top at 2000 m). Every
   panel is a grid an API call returned, drawn from its own COORD and ZCORN, and the numbers
@@ -34,6 +36,7 @@ KINDS = {
     "check": dict(fc="#efedf5", ec="#6a51a3", label="check or gate"),
     "decision": dict(fc="#fff7bc", ec="#b8860b", label="decision"),
     "end": dict(fc="#e5f5e0", ec="#31a354", label="result"),
+    "stop": dict(fc="#fde0dd", ec="#b2182b", label="refused: no grid written"),
     "note": dict(fc="#f5f5f5", ec="#9e9e9e", label="where to read more"),
 }
 TITLE_KW = dict(fontsize=9.5, family="DejaVu Sans", weight="bold", color="#1a1a1a")
@@ -229,7 +232,7 @@ def chooser(out):
           ref="map trace → FAULTS through all layers\ngrid unchanged"),
         B("w2", "end", 1.0, 3.5, "2 · Full 3D projection",
           ref="3D surface → X, Y and Z faces\nwith real K ranges; grid unchanged;\n"
-              "to slide a dipping fault: 5"),
+              "to slide it: 9"),
         B("w7", "end", 2.05, 3.5, "7 · Fault zones",
           ref="the cells within ±D of a fault;\noptionally keep 4, 5, 6 inside them"),
         B("w3", "end", 3.1, 3.5, "3 · 2D / 2.5D deformation",
@@ -240,6 +243,9 @@ def chooser(out):
           ref="fit or tilt the pillars, then\nslide along them, in one call"),
         B("w6", "end", 6.1, 3.5, "6 · Set a dip angle",
           ref="tilt a fault's pillars to an angle\n(COORD only)"),
+        B("w9", "end", 7.1, 3.5, "9 · Slide a 3D surface",
+          ref="vertical: slide its 3D FAULTS;\ndipping: move the pillars onto it\n"
+              "first; horizontal: not possible"),
         B("w8", "note", 3.1, 4.55, "8 · On a field deck: wrap any of these in the deck workflow",
           ref="intake (read only) → edit → the four gates → INCLUDE files; the master deck"
               " is never rewritten"),
@@ -255,6 +261,7 @@ def chooser(out):
         E("d3", "w4", "layers, in depth", via=2.75),
         E("d3", "w5", "both", via=2.75),
         E("d3", "w6", "the dip angle", via=2.75),
+        E("d3", "w9", "slip on a\n3D surface", via=2.75),
     ]
     flowchart(out / "chooser.png", "Which workflow?",
               "Answer two questions; each result is a page of this section with its own "
@@ -317,7 +324,7 @@ def flow_2(out):
         B("n", "check", 2.55, 4.6, "The grid is unchanged",
           ref="a dipping fault is a staircase in depth too.\nTo make cells follow it: "
               "workflow 3 (stage 2)\nor 6 (dip angle). The staircase cannot be slid\n"
-              "(SlideError); to slide the fault: workflow 5"),
+              "(SlideError); to slide the fault: workflow 9"),
     ]
     edges = [E("g", "d"), E("d", "a", "planar", via=2.05), E("d", "b", "curved", via=2.05),
              E("d", "c", "a mesh", via=2.05),
@@ -551,6 +558,56 @@ def flow_8(out):
               xs=250, ys=84)
 
 
+def flow_9(out):
+    B, E = Box, Edge
+    boxes = [
+        B("s", "start", 1.55, 0, "A 3D fault surface",
+          ref="a polygon, facets or a quad mesh (workflow 2);\nsticks or a point cloud: "
+              "fit_plane / facet_surface (lesson 25)"),
+        B("d", "decision", 1.55, 1.3, "How does it lie\nagainst the pillars?"),
+        B("v1", "step", 0, 2.95, "Project it in 3D",
+          "surface = project_fault_surface(\n    wall, mesh)",
+          "X and Y faces only, with a K range\nworkflow 2 · lesson 05"),
+        B("v2", "data", 0, 4.05, "Write it into the deck",
+          "write_grid_include(grid, deck)\nfaults_text_3d({\"F9\": surface}, mesh)",
+          "or write_faults_3d + INCLUDE"),
+        B("v3", "step", 0, 5.2, "Slide the deck",
+          "slide_deck(deck, Throw(\"F9\", 10.0,\n    hanging_side=EAST), \"out\")",
+          "a K range becomes Throw.layers:\nblind tips stay welded · workflow 4"),
+        B("k", "check", 1.62, 2.95, "Move the pillars onto it first",
+          ref="its 3D staircase cannot be slid: the X faces\nfall on several pillar lines and "
+              "the Z steps\nhave no pillar to slide along (SlideError)"),
+        B("a", "step", 1.1, 4.4, "A · Fit the pillars to it",
+          "a = adapt_grid(grid, plane,\n    top_trace=\"auto\",\n    boundary=\"slide\")\n"
+          "slide_grid(a.grid, Throw(\n    a.faults_after, 15.0, ...))",
+          "a polygon or facets · lesson 30 C\nworkflow 5 A"),
+        B("b", "step", 2.2, 4.4, "B · Tilt a pillar line to its angle",
+          "angle = dip of fit_plane(plane)\nfaces = fault_faces_for(grid,\n"
+          "  [surface_top_trace(grid, plane)])\ndip_grid(grid, Dip(faces, angle,\n"
+          "    pivot=\"top\"), slide=Throw(...))",
+          "lesson 31 I · workflows 5 B, 6"),
+        B("h", "stop", 3.35, 2.95, "Not possible",
+          ref="slide and dip both refuse a fault\nwhose faces are all Z: pillars run\n"
+              "unbroken from top to base.\nKeep its 3D FAULTS as a barrier"),
+        B("o", "end", 1.1, 6.3, "A slid grid",
+          "res.grid · res.realized_throw(\"F\")",
+          "check res.ok and res.unexpected (empty);\nfor a deck: workflow 8"),
+    ]
+    edges = [
+        E("s", "d"),
+        E("d", "v1", "along them\n(vertical)", via=2.2),
+        E("d", "k", "across them\n(dipping)", via=2.2),
+        E("d", "h", "flat\n(horizontal)", via=2.2),
+        E("v1", "v2"), E("v2", "v3"),
+        E("k", "a", "fit them", via=3.7), E("k", "b", "tilt them", via=3.7),
+        E("v3", "o", via=5.85), E("a", "o", via=5.85), E("b", "o", via=5.85),
+    ]
+    flowchart(out / "flow-9-slide-3d.png", "Workflow 9 · Slide a 3D fault surface",
+              "A slide moves corners along their pillars. A surface that lies along them "
+              "slides as projected; one that crosses them needs the pillars moved first.",
+              boxes, edges, xs=235, ys=86)
+
+
 # ── computed illustrations ───────────────────────────────────────────────────────────────────
 
 NX, NY, NZ, DX, DZ, TOP = 16, 8, 6, 50.0, 15.0, 2000.0
@@ -765,6 +822,7 @@ def compute():
              adapt45=a45, adapt45_slid=a45s,
              adapt45_lines=sorted({f.i for f in a45.faults_after if f.face == "X"}),
              adapt45_throw=float(np.nanmedian(a45s.realized_throw("F")[:, 1])))
+    r.update(compute_9(grid, mesh))
     # 3 stage 2: an interior dipping plane, top x = 300, base x = 380
     poly2 = np.array([[300.0, 40.0, TOP - 5], [300.0, 360.0, TOP - 5],
                       [380.0, 360.0, TOP + 95], [380.0, 40.0, TOP + 95]])
@@ -813,6 +871,128 @@ def compute():
     assert dz.ok
     r.update(zone=z, dip_zone=dz, moved_all=moved(grid, d6.grid), moved_zone=moved(grid, dz.grid))
     assert not (r["moved_zone"] & ~z.cells).any()
+    return r
+
+
+def compute_9(grid, mesh):
+    """Workflow 9: slide a 3D fault surface, by how it lies against the (vertical) pillars."""
+    from cpg2unstructured import fit_plane, write_grid_include
+    from fault_projections import (Dip, DipError, SlideError, Throw, adapt_grid, dip_deck,
+                                   dip_grid, fault_faces_for, faults_text_3d,
+                                   project_fault_surface, slide_deck, slide_grid,
+                                   surface_top_trace)
+    from fault_projections.from_faults import faults_from_deck
+
+    r = {}
+    span = (-10.0, NY * DX + 10)
+
+    def wall(x0, z0, x1, z1, y=span):
+        return np.array([[x0, y[0], z0], [x0, y[1], z0], [x1, y[1], z1], [x1, y[0], z1]])
+
+    def deck_with(tmp, name, surface):
+        path = Path(tmp) / f"{name}.grdecl"
+        write_grid_include(grid, path, header=f"workflow 9: {name}")
+        with open(path, "a") as fh:
+            fh.write("\n" + faults_text_3d({name: surface}, mesh))
+        return path
+
+    def refusal(call, *args, exc):
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                call(*args)
+        except exc as e:
+            return str(e)
+        return None
+
+    with TemporaryDirectory() as tmp:
+        # along the pillars: a vertical wall through every layer, and one through layers 1-3
+        for name, zb in (("V", TOP + 95), ("B", TOP + 45)):
+            s = project_fault_surface(wall(410.0, TOP - 5, 410.0, zb), mesh)
+            n = np.bincount(s.direction, minlength=3)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                res = slide_deck(deck_with(tmp, name, s), Throw(name, 10.0, hanging_side=EAST),
+                                 Path(tmp) / name)
+            assert n[2] == 0 and res.ok and not res.unexpected
+            prof = [float(np.nanmedian(res.realized_throw(name, h)[:, 1])) for h in range(NZ + 1)]
+            r[f"v9_{name}"] = dict(plane=((410.0, TOP - 5), (410.0, zb)), surf=s, counts=n,
+                                   res=res, prof=prof,
+                                   k=sorted({int(c[0][2]) + 1 for c in s.cell_ijk}))
+        assert r["v9_V"]["prof"][0] == r["v9_V"]["prof"][-1] == 10.0
+        assert r["v9_B"]["k"] == [1, 2, 3] and r["v9_B"]["prof"][0] == 10.0
+        assert r["v9_B"]["prof"][3] == r["v9_B"]["prof"][-1] == 0.0
+        # across the pillars: a 45 degree plane, top x = 350 (on pillar line 7), base x = 440
+        za, zb, xa = TOP - 5, TOP + 95, 345.0
+        xb = xa + (zb - za)
+        s45 = project_fault_surface(wall(xa, za, xb, zb), mesh)
+        d = deck_with(tmp, "D", s45)
+        seen = sorted({f.i for f in faults_from_deck(d)["D"]})
+        msg = refusal(slide_deck, d, Throw("D", 15.0, hanging_side=EAST), Path(tmp) / "D",
+                      exc=SlideError)
+        assert msg and len(seen) > 1
+        r.update(d9_plane=((xa, za), (xb, zb)), d9_surf=s45, d9_seen=seen, d9_refused=msg,
+                 d9_counts=np.bincount(s45.direction, minlength=3))
+        # flat: a horizontal surface at the base of layer 3, x 200-600: Z faces only
+        sh = project_fault_surface(np.array([[200.0, span[0], TOP + 45], [600.0, span[0], TOP + 45],
+                                             [600.0, span[1], TOP + 45],
+                                             [200.0, span[1], TOP + 45]]), mesh)
+        d = deck_with(tmp, "H", sh)
+        h_slide = refusal(slide_deck, d, Throw("H", 10.0, hanging_side=EAST), Path(tmp) / "H",
+                          exc=SlideError)
+        h_dip = refusal(dip_deck, d, Dip("H", 45.0, hanging_side=EAST), Path(tmp) / "H",
+                        exc=DipError)
+        nh = np.bincount(sh.direction, minlength=3)
+        assert h_slide and h_dip and nh[0] == nh[1] == 0 and nh[2] > 0
+        r.update(h9_surf=sh, h9_plane=((200.0, TOP + 45), (600.0, TOP + 45)), h9_counts=nh,
+                 h9_slide=h_slide, h9_dip=h_dip)
+    # route A: fit the pillars to the plane (top trace auto), then slide 15 m
+    plane = wall(xa, za, xb, zb, y=(-2000.0, 2000.0))
+    a = adapt_grid(grid, plane, top_trace="auto", boundary="slide", w0=0.05, polish="barrier",
+                   on_invalid="raise")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        a_s = slide_grid(a.grid, Throw(a.faults_after, 15.0, hanging_side=EAST, name="F"))
+    lines = sorted({f.i for f in a.faults_after if f.face == "X"})
+    assert a.ok and a_s.ok and not a_s.unexpected
+    assert abs(angle_of(a_s.grid, lines[0]) - 45.0) < 0.5   # needs cpg2python PR #50
+    # route B: the plane's angle (fit_plane) on the pillar line under its top trace
+    _, normal, _, _ = fit_plane(plane)
+    angle = float(np.degrees(np.arccos(abs(normal[2]))))
+    faces = fault_faces_for(grid, [surface_top_trace(grid, plane)])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        b = dip_grid(grid, Dip(faces, angle, hanging_side=EAST, pivot="top", name="F"),
+                     slide=Throw(faces, 15.0, hanging_side=EAST, name="F"))
+    bi = faces[0].i
+    x0, _, z0, x1, _, z1 = np.asarray(b.grid.coord, float).reshape(NY + 1, NX + 1, 6)[ROW, bi]
+    assert b.ok and b.slide is not None and b.slide.ok and {f.i for f in faces} == {bi}
+    assert abs(x0 - (xa + z0 - za)) < 1e-6 and abs(x1 - (xa + z1 - za)) < 1e-6
+    # route B snaps: a plane meeting the top at x = 365 tilts pillar line 7 (x = 350)
+    off = wall(360.0, za, 460.0, zb, y=(-2000.0, 2000.0))
+    off_faces = fault_faces_for(grid, [surface_top_trace(grid, off)])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        bo = dip_grid(grid, Dip(off_faces, 45.0, hanging_side=EAST, pivot="top", name="F"))
+    xo = np.asarray(bo.grid.coord, float).reshape(NY + 1, NX + 1, 6)[ROW, off_faces[0].i]
+    # route A also takes facets: 60 degrees down to z = 2045 m, then 45 degrees
+    t60 = np.tan(np.radians(60.0))
+    xm = 330.0 + (TOP + 45 - (TOP - 10)) / t60
+    fy = (-2000.0, 2000.0)
+    facets = [wall(330.0, TOP - 10, xm, TOP + 45, y=fy),
+              wall(xm, TOP + 45, xm + 55.0, TOP + 100, y=fy)]
+    af = adapt_grid(grid, facets, top_trace="auto", boundary="slide", w0=0.05,
+                    polish="barrier", on_invalid="raise")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        afs = slide_grid(af.grid, Throw(af.faults_after, 15.0, hanging_side=EAST, name="F"))
+    assert af.ok and afs.ok and not afs.unexpected
+    r.update(a9=a, a9_slid=a_s, a9_lines=lines, a9_angle=angle_of(a_s.grid, lines[0]),
+             a9_throw=float(np.nanmedian(a_s.realized_throw("F")[:, 1])),
+             b9=b, b9_line=bi, b9_angle=angle, b9_top=(x0, z0), b9_base=(x1, z1),
+             b9_throw=float(np.nanmedian(b.slide.realized_throw("F")[:, 1])),
+             b9_offset=float(365.0 - xo[0]), b9_offset_line=off_faces[0].i,
+             f9_throw=float(np.nanmedian(afs.realized_throw("F")[:, 1])))
     return r
 
 
@@ -968,11 +1148,346 @@ def illustrations(out, r):
          "optionally keep an edit inside them")
 
 
+def stamp(ax, text="REFUSED"):
+    ax.text(0.985, 0.08, text, transform=ax.transAxes, ha="right", fontsize=13, weight="bold",
+            color=RED, bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=RED, lw=1.2))
+
+
+def illustration_9(out, r):
+    import matplotlib.pyplot as plt
+
+    g = r["grid"]
+    fig, axs = plt.subplots(5, 2, figsize=(12.5, 11.0), layout="constrained")
+    v, b = r["v9_V"], r["v9_B"]
+    section(axs[0, 0], g, f"BEFORE: a vertical wall at x = 410 m through every layer,\n"
+            f"projected in 3D: {v['counts'][0]} X faces (red) at x = 400 m, no Z faces",
+            faces3d=v["surf"], plane=v["plane"])
+    section(axs[0, 1], v["res"].grid, f"AFTER slide_deck(Throw 10): the hanging wall drops "
+            f"{v['prof'][0]:.1f} m\nat the top and {v['prof'][-1]:.1f} m at the base",
+            faces3d=v["surf"])
+    section(axs[1, 0], g, f"BEFORE: the same wall through layers 1–3 only (blind):\n"
+            f"{b['counts'][0]} X faces, K = {b['k'][0]}..{b['k'][-1]} in its FAULTS",
+            faces3d=b["surf"], plane=b["plane"])
+    section(axs[1, 1], b["res"].grid, f"AFTER: the K range becomes Throw.layers = (1, 3): "
+            f"{b['prof'][0]:.1f} m at the top,\n{b['prof'][3]:.1f} m from the base of layer 3 "
+            "down (the blind tip stays welded)", faces3d=b["surf"])
+    n, seen = r["d9_counts"], r["d9_seen"]
+    section(axs[2, 0], g, f"BEFORE: a 45 deg plane (dashed), projected in 3D: {n[0]} X + "
+            f"{n[2]} Z faces,\na staircase across the pillars", faces3d=r["d9_surf"],
+            plane=r["d9_plane"])
+    section(axs[2, 1], g, f"slide_deck on those FAULTS: the X faces fall on {len(seen)} "
+            f"pillar lines\n(i = {', '.join(map(str, seen))}): SlideError, no grid written",
+            pillars=seen, plane=r["d9_plane"])
+    stamp(axs[2, 1])
+    a = r["a9_slid"]
+    section(axs[3, 0], a.grid, f"AFTER A: adapt_grid(plane, top_trace=\"auto\") + slide_grid"
+            f"(Throw 15):\npillars fitted to the plane, {r['a9_angle']:.1f} deg; throw "
+            f"{r['a9_throw']:.1f} m", pillars=r["a9_lines"], plane=r["d9_plane"])
+    bg = r["b9"].slide.grid
+    section(axs[3, 1], bg, f"AFTER B: dip_grid(Dip({r['b9_angle']:.1f}, pivot=\"top\"), slide="
+            f"Throw 15):\n{angle_of(bg, r['b9_line']):.1f} deg; throw {r['b9_throw']:.1f} m",
+            pillars=[r["b9_line"]], plane=r["d9_plane"])
+    nh = r["h9_counts"]
+    section(axs[4, 0], g, f"BEFORE: a horizontal surface at 2045 m (x 200–600 m), "
+            f"projected in 3D:\n{nh[2]} Z faces (red), no X or Y faces", faces3d=r["h9_surf"],
+            plane=r["h9_plane"])
+    section(axs[4, 1], g, "slide_deck: SlideError; dip_deck: DipError (all its faces are Z);\n"
+            "the grid is unchanged", faces3d=r["h9_surf"], plane=r["h9_plane"])
+    stamp(axs[4, 1])
+    save(fig, out / "ill-9-slide-3d.png", "9 · Slide a 3D fault surface: vertical slides as "
+         "projected; dipping, move the pillars first; flat cannot slide")
+
+
+# ── drawn schematics (not computed) ──────────────────────────────────────────────────────────
+
+FW, HW = "#c6dbef", "#fdd0a2"
+OK_C, NO_C = "#238b45", RED
+
+
+def _poly(ax, pts, **kw):
+    from matplotlib.patches import Polygon
+
+    kw.setdefault("ec", "#333333")
+    kw.setdefault("lw", 0.8)
+    ax.add_patch(Polygon(pts, closed=True, **kw))
+
+
+def _px(p, y, H):
+    """x on pillar ``p`` = (x at the top y = 0, x at the base y = -H) at depth ``y``."""
+    return p[0] + (p[1] - p[0]) * (-y) / H
+
+
+def _cell(ax, pl, pr, k, h, H, s=0.0, **kw):
+    """Cell of layer k between pillars pl and pr, moved down its pillars by s."""
+    y0, y1 = -k * h - s, -(k + 1) * h - s
+    _poly(ax, [(_px(pl, y0, H), y0), (_px(pr, y0, H), y0), (_px(pr, y1, H), y1),
+               (_px(pl, y1, H), y1)], **kw)
+
+
+def _pillar(ax, p, H, ext=0.25, **kw):
+    kw.setdefault("color", "#7f7f7f")
+    kw.setdefault("lw", 1.2)
+    ax.plot([_px(p, ext, H), _px(p, -H - ext, H)], [ext, -H - ext], zorder=0, **kw)
+
+
+def _arrow(ax, a, b, color=BLUE, lw=1.8):
+    ax.annotate("", xy=b, xytext=a, arrowprops=dict(arrowstyle="-|>", color=color, lw=lw,
+                                                    mutation_scale=13))
+
+
+def _frame(ax, title, caption, colour="#1a1a1a"):
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_title(title, fontsize=10, weight="bold", color=colour)
+    ax.text(0.5, -0.02, caption, transform=ax.transAxes, ha="center", va="top", fontsize=8.3,
+            color="#333333", linespacing=1.3)
+
+
+def _block(ax, pillars, nz, h, hw_from, s, layer_colours=True):
+    """Columns between consecutive pillars; columns >= hw_from moved down by s."""
+    H = nz * h
+    for c in range(len(pillars) - 1):
+        for k in range(nz):
+            moved = c >= hw_from
+            fc = PALETTE[k] if layer_colours else (HW if moved else FW)
+            _cell(ax, pillars[c], pillars[c + 1], k, h, H, s if moved else 0.0, fc=fc)
+    for p in pillars:
+        _pillar(ax, p, H)
+    return H
+
+
+def _staircase(ax, xline, nz, h, lw=2.6, colour=RED):
+    """X faces at the pillar nearest the plane in each layer, joined by Z steps."""
+    xs = [round(xline(-(k + 0.5) * h)) for k in range(nz)]
+    for k, x in enumerate(xs):
+        ax.plot([x, x], [-k * h, -(k + 1) * h], color=colour, lw=lw, solid_capstyle="round")
+        if k + 1 < nz and xs[k + 1] != x:
+            ax.plot([x, xs[k + 1]], [-(k + 1) * h] * 2, color=colour, lw=lw,
+                    solid_capstyle="round")
+    return xs
+
+
+def why_pillars(out):
+    """Why a corner-point slide needs the fault to lie along the pillars (drawn)."""
+    import matplotlib.pyplot as plt
+
+    fig, axs = plt.subplots(1, 4, figsize=(15.0, 4.3), layout="constrained")
+    h, s = 0.6, 0.3
+    # a: vertical fault, vertical pillars
+    ax = axs[0]
+    P = [(0, 0), (1, 1), (2, 2)]
+    H = _block(ax, P, 3, h, 1, s)
+    ax.plot([1, 1], [0, -H - s], color=RED, lw=2.6)
+    _arrow(ax, (1.18, -0.35), (1.18, -0.35 - s - 0.25))
+    _frame(ax, "✓  A vertical fault", "corners move down their own pillar;\non a vertical "
+           "pillar that is slip\nalong the fault (workflows 4, 9)", OK_C)
+    ax.set_xlim(-1.3, 3.3)
+    ax.set_ylim(-H - 0.75, 0.4)
+    # b: the pillars tilted into the fault
+    ax = axs[1]
+    t = 0.9
+    P = [(0, t), (1, 1 + t), (2, 2 + t)]
+    H = _block(ax, P, 3, h, 1, s)
+    ax.plot([_px(P[1], 0, H), _px(P[1], -H - s, H)], [0, -H - s], color=RED, lw=2.6)
+    y0, y1 = -0.3, -0.3 - s - 0.3
+    _arrow(ax, (_px(P[1], y0, H) + 0.2, y0), (_px(P[1], y1, H) + 0.2, y1))
+    _frame(ax, "✓  Pillars tilted into the fault", "the pillar lies in the fault, so down "
+           "the\npillar is down-dip slip (workflows 5, 6,\n9 A and B)", OK_C)
+    ax.set_xlim(-0.85, 3.75)
+    ax.set_ylim(-H - 0.75, 0.4)
+    # c: a dipping staircase on vertical pillars
+    ax = axs[2]
+    nz, nx = 3, 4
+    H = nz * h
+    fault = [1, 2, 3]                            # the X face's pillar in each layer
+    for c in range(nx):
+        for k in range(nz):
+            _cell(ax, (c, c), (c + 1, c + 1), k, h, H, fc=HW if c >= fault[k] else FW)
+    for c in range(nx + 1):
+        _pillar(ax, (c, c), H)
+
+    def plane(y):
+        return 0.75 + (-y) / h
+
+    ax.plot([plane(0.1), plane(-H - 0.1)], [0.1, -H - 0.1], "--", color=BLUE, lw=1.4)
+    _staircase(ax, plane, nz, h)
+    _cell(ax, (1, 1), (2, 2), 0, h, H, s, fc="none", ec=NO_C, lw=1.3, ls="--")
+    _poly(ax, [(1, -h), (2, -h), (2, -h - s), (1, -h - s)], fc="#fcbba1", ec=NO_C,
+          hatch="xxx", lw=0, alpha=0.9)
+    ax.text(2.06, -h - s / 2, "overlap", color=NO_C, fontsize=8.5, va="center", weight="bold")
+    _arrow(ax, (1.5, -0.12), (1.5, -0.12 - s), color=NO_C)
+    _frame(ax, "✗  A dipping staircase", "on a Z step, down the pillar runs into the\n"
+           "cell below; the X faces sit on 3 pillar\nlines: SlideError (move the pillars)",
+           NO_C)
+    ax.set_xlim(-0.3, 4.3)
+    ax.set_ylim(-H - 0.75, 0.4)
+    # d: a horizontal fault
+    ax = axs[3]
+    nz, H = 2, 2 * h
+    for c in range(3):
+        for k in range(nz):
+            _cell(ax, (c, c), (c + 1, c + 1), k, h, H, fc=HW if k == 0 else FW)
+    for c in range(4):
+        _pillar(ax, (c, c), H, lw=2.4, color="#525252")
+    ax.plot([0, 3], [-h, -h], color=RED, lw=2.6)
+    _arrow(ax, (0.6, -0.3), (2.4, -0.3), color=NO_C)
+    ax.text(1.5, -0.18, "the slip", color=NO_C, fontsize=8.5, ha="center", va="bottom")
+    for c in (1, 2):
+        ax.text(c, -h, "✗", color=NO_C, fontsize=13, ha="center", va="center", weight="bold",
+                bbox=dict(boxstyle="circle,pad=0.05", fc="white", ec="none"))
+    _frame(ax, "✗  A horizontal fault", "the slip is sideways, but corners only move\nalong "
+           "their pillars and a pillar is one\nline from top to base: no grid can do it", NO_C)
+    ax.set_xlim(-0.8, 3.8)
+    ax.set_ylim(-H - 1.35, 0.4)
+    fig.suptitle("Why a slide needs the fault along the pillars (schematic; sections, depth "
+                 "down)", fontsize=11)
+    fig.savefig(out / "why-pillars.png", dpi=110, facecolor="white")
+    plt.close(fig)
+    print(out / "why-pillars.png")
+
+
+def concepts(out):
+    """One small schematic per workflow (drawn, not computed)."""
+    import matplotlib.pyplot as plt
+
+    fig, axs = plt.subplots(3, 3, figsize=(13.5, 10.6), layout="constrained")
+    h = 0.6
+    # 1 stair-step, plan
+    ax = axs[0, 0]
+    for i in range(5):
+        for j in range(4):
+            _poly(ax, [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)], fc="#f0f0f0", lw=0.6)
+    stair = [(0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2), (4, 2), (4, 3), (5, 3), (5, 4)]
+    ax.plot(*zip(*stair), color=RED, lw=2.6)
+    ax.plot([0, 5], [0.1, 3.9], "--", color=BLUE, lw=1.5)
+    _frame(ax, "1 · Stair-step projection", "a map trace (dashed) becomes FAULTS on cell "
+           "edges;\nthe grid does not move")
+    # 2 full 3D, section
+    ax = axs[0, 1]
+    nz, H = 4, 4 * h
+    for c in range(5):
+        for k in range(nz):
+            _cell(ax, (c, c), (c + 1, c + 1), k, h, H, fc=PALETTE[k])
+
+    def plane2(y):
+        return 0.9 + 0.75 * (-y) / h
+
+    ax.plot([plane2(0.1), plane2(-H - 0.1)], [0.1, -H - 0.1], "--", color=BLUE, lw=1.5)
+    _staircase(ax, plane2, nz, h)
+    _frame(ax, "2 · Full 3D projection", "a 3D surface becomes X, Y and Z faces with\n"
+           "real K ranges; the grid does not move")
+    # 3 deformation, plan: the staircase nodes moved onto the trace
+    ax = axs[0, 2]
+    a, b = np.array([0.0, 0.1]), np.array([5.0, 3.9])
+    nodes = np.array([[(i, j) for j in range(5)] for i in range(6)], float)
+    for i, j in stair:
+        p = nodes[i, j]
+        t = np.clip((p - a) @ (b - a) / ((b - a) @ (b - a)), 0, 1)
+        nodes[i, j] = a + t * (b - a)
+    for i in range(5):
+        for j in range(4):
+            _poly(ax, [nodes[i, j], nodes[i + 1, j], nodes[i + 1, j + 1], nodes[i, j + 1]],
+                  fc="#f0f0f0", lw=0.6)
+    ax.plot(*zip(*[nodes[i, j] for i, j in stair]), color=RED, lw=2.6)
+    _frame(ax, "3 · 2D / 2.5D deformation", "pillars move onto the trace (stage 1)\nor tilt "
+           "into a dipping plane (stage 2)")
+    # 4 slide
+    ax = axs[1, 0]
+    P = [(c, c) for c in range(5)]
+    H = _block(ax, P, 3, h, 2, 0.35)
+    ax.plot([2, 2], [0, -H - 0.35], color=RED, lw=2.6)
+    _arrow(ax, (2.25, -0.3), (2.25, -0.85))
+    _frame(ax, "4 · Fault slide", "corners move down their pillars (ZCORN):\nthe hanging "
+           "wall drops by the throw")
+    # 5 slide + pillar shift
+    ax = axs[1, 1]
+    t = 0.8
+    P = [(c, c + t) for c in range(5)]
+    H = _block(ax, P, 3, h, 2, 0.35)
+    ax.plot([_px(P[2], 0, H), _px(P[2], -H - 0.35, H)], [0, -H - 0.35], color=RED, lw=2.6)
+    _arrow(ax, (_px(P[2], -0.3, H) + 0.25, -0.3), (_px(P[2], -0.85, H) + 0.25, -0.85))
+    _frame(ax, "5 · Slide + pillar shift", "fit or tilt the pillars (COORD), then slide\nthe "
+           "hanging wall along them (ZCORN)")
+    # 6 dip angle
+    ax = axs[1, 2]
+    lean = [0.0, 0.25, 0.8, 0.25, 0.0]
+    P = [(c, c + lean[c]) for c in range(5)]
+    H = _block(ax, P, 3, h, 9, 0.0)
+    ax.plot([2, 2], [0, -H], ":", color="#555555", lw=1.4)
+    ax.plot([2, 2 + lean[2]], [0, -H], color=RED, lw=2.6)
+    from matplotlib.patches import Arc
+
+    theta = np.degrees(np.arctan2(H, lean[2]))
+    ax.add_patch(Arc((2, 0), 1.0, 1.0, theta1=-90, theta2=-theta, color=BLUE, lw=1.4))
+    ax.text(2.3, -0.75, "θ", color=BLUE, fontsize=12, ha="center", va="center")
+    _frame(ax, "6 · Set a dip angle", "tilt a fault's pillars to an angle (COORD only);\n"
+           "ZCORN, ACTNUM and FAULTS stay")
+    # 7 zones, plan
+    ax = axs[2, 0]
+    for i in range(8):
+        for j in range(4):
+            side = "#92c5de" if 2 <= i < 4 else ("#f4a582" if 4 <= i < 6 else "#f0f0f0")
+            _poly(ax, [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)], fc=side, lw=0.6)
+    ax.plot([4, 4], [0, 4], color=RED, lw=2.6)
+    for x0, x1, lab in ((4, 2, "−D"), (4, 6, "+D")):
+        ax.annotate("", xy=(x1, 4.3), xytext=(x0, 4.3),
+                    arrowprops=dict(arrowstyle="-|>", color="#333333", lw=1.2))
+        ax.text((x0 + x1) / 2, 4.55, lab, ha="center", va="bottom", fontsize=10)
+    ax.set_ylim(-0.3, 5.2)
+    _frame(ax, "7 · Fault zones", "select the cells within ±D of a fault (FLTZONE);\n"
+           "optionally keep a dip or slide inside them")
+    # 8 field deck
+    ax = axs[2, 1]
+    box = dict(boxstyle="round,pad=0.35", lw=1.2)
+    items = [(0.5, 3.6, "FIELD.DATA + GRDECL\n(read only)", "#deebf7", "#3182bd"),
+             (0.5, 2.55, "edit: workflows 3–7, 9", "#ffffff", "#404040"),
+             (0.5, 1.5, "four gates · SVGs · dossier", "#efedf5", "#6a51a3"),
+             (0.5, 0.45, "<prefix>_grid.grdecl\n<prefix>_faults.grdecl", "#e5f5e0", "#31a354")]
+    for x, y, txt, fc, ec in items:
+        ax.text(x, y, txt, ha="center", va="center", fontsize=9, family="DejaVu Sans",
+                bbox=dict(fc=fc, ec=ec, **box))
+    for y0, y1 in ((3.25, 2.85), (2.25, 1.8), (1.2, 0.85)):
+        _arrow(ax, (0.5, y0), (0.5, y1), color="#555555", lw=1.2)
+    ax.set_xlim(-0.6, 1.6)
+    ax.set_ylim(-0.1, 4.2)
+    _frame(ax, "8 · A field deck, end to end", "the master deck is never rewritten:\nthe "
+           "edit goes into separate INCLUDE files")
+    # 9 slide a 3D surface: along, across, flat
+    ax = axs[2, 2]
+    H = 2.0
+    for dx in (-0.45, 0.45):                         # vertical pillars around the wall
+        ax.plot([0.4 + dx, 0.4 + dx], [0.2, -H - 0.2], color="#7f7f7f", lw=1.0)
+    ax.plot([0.4, 0.4], [0, -H], color=RED, lw=2.6)
+    _arrow(ax, (0.6, -0.4), (0.6, -1.2))
+    ax.plot([1.75, 2.45], [0, -H], color=RED, lw=2.6)
+    for dx in (-0.45, 0.45):
+        ax.plot([1.75 + dx, 2.45 + dx], [0.2, -H - 0.2], color="#7f7f7f", lw=1.0, ls="--")
+    _arrow(ax, (2.25, -0.45), (2.25 + 0.7 * 0.4, -0.45 - 0.8))
+    for c in (3.3, 3.9, 4.5):
+        ax.plot([c, c], [0.2, -H - 0.2], color="#7f7f7f", lw=1.0)
+    ax.plot([3.1, 4.7], [-H / 2, -H / 2], color=RED, lw=2.6)
+    for x, mark, col, lab in ((0.4, "✓", OK_C, "vertical"), (2.1, "✓", OK_C, "dipping:\npillars "
+                              "moved"), (3.9, "✗", NO_C, "horizontal")):
+        ax.text(x, 0.45, mark, ha="center", va="bottom", fontsize=15, color=col, weight="bold")
+        ax.text(x, -H - 0.35, lab, ha="center", va="top", fontsize=8.5, color="#333333")
+    ax.set_xlim(-0.3, 5.0)
+    ax.set_ylim(-H - 1.0, 1.0)
+    _frame(ax, "9 · Slide a 3D fault surface", "a slide moves corners along the pillars: it "
+           "needs\nthe fault along them (see 'Why' on page 9)")
+    for ax in axs.flat:
+        ax.margins(0.06)
+    fig.suptitle("The workflows in one picture each (schematic; plan views for 1, 3 and 7, "
+                 "sections for the rest)", fontsize=11.5)
+    fig.savefig(out / "concepts.png", dpi=110, facecolor="white")
+    plt.close(fig)
+    print(out / "concepts.png")
+
+
 def overview(out, r):
     import matplotlib.pyplot as plt
 
     g = r["grid"]
-    fig, axs = plt.subplots(4, 2, figsize=(12.5, 10.0), layout="constrained")
+    fig, axs = plt.subplots(5, 2, figsize=(12.5, 12.4), layout="constrained")
     plan(axs[0, 0], g, "1 · Stair-step: FAULTS on the unchanged grid", faults=r["stair"],
          trace=r["trace"])
     plan(axs[0, 1], r["stage1"].grid, "3 · Stage 1: pillars moved onto the trace",
@@ -987,6 +1502,11 @@ def overview(out, r):
     section(axs[3, 0], r["dip"].grid, "6 · Dip angle: 60 deg, COORD only", pillars=[8])
     section(axs[3, 1], r["dip_zone"].grid, "7 · Zone: the same dip kept within 100 m",
             pillars=[8], zone=r["zone"].cells, hit=r["moved_zone"])
+    b = r["v9_B"]
+    section(axs[4, 0], b["res"].grid, "9 · A blind vertical 3D fault (layers 1–3) slid 10 m",
+            faces3d=b["surf"])
+    section(axs[4, 1], r["a9_slid"].grid, "9 · A dipping 3D plane: pillars fitted, slid 15 m",
+            pillars=r["a9_lines"], plane=r["d9_plane"])
     save(fig, out / "at-a-glance.png", "The workflows at a glance: one synthetic grid "
          "(16 x 8 x 6 cells), the grids the calls return")
 
@@ -997,10 +1517,14 @@ def main(assets: Path) -> int:
     matplotlib.use("Agg")
     out = assets / "workflows"
     out.mkdir(parents=True, exist_ok=True)
-    for chart in (chooser, flow_1, flow_2, flow_3, flow_4, flow_5, flow_6, flow_7, flow_8):
+    for chart in (chooser, flow_1, flow_2, flow_3, flow_4, flow_5, flow_6, flow_7, flow_8,
+                  flow_9):
         chart(out)
+    why_pillars(out)
+    concepts(out)
     r = compute()
     illustrations(out, r)
+    illustration_9(out, r)
     overview(out, r)
     return 0
 
