@@ -15,9 +15,14 @@
   pillars and takes column faces over one K range; `slide_deck` drops the
   Z steps, sees parallel lines and raises `SlideError`. Move the pillars
   onto the fault first (`adapt_grid(top_trace="auto")` or `dip_grid`, then
-  slide: workflow 5). A vertical fault projected in 3D slides (its K range
+  slide: workflows 5 and 9). A vertical fault projected in 3D slides (its K range
   becomes `Throw.layers`). A horizontal fault (Z faces only) can be neither
   slid nor dipped: pillars cannot be offset across it.
+- **Dip by `dip_grid` from a 3D surface (workflow 9, route B):** the faces
+  come from the plane's top trace, snapped to the nearest pillar line, so
+  the tilted line can lie up to half a cell from the plane (15 m measured
+  for a plane meeting the top 15 m off a line). `adapt_grid` moves the
+  pillars onto the plane itself.
 - **Near-flat cells:** validity alone allows a low scaled Jacobian;
   add a project-specific floor and inspect both planes.
 - **Deck semantics:** generating an INCLUDE does not rewrite or
@@ -126,3 +131,10 @@
     spanning tree, so U-shaped and hooked faults no longer fold.
   - `Throw.layers=(k1, k2)` slides a blind fault; `slide_deck` reads it
     from the `FAULTS` K range (earlier versions slid every layer).
+- **Fixed upstream in cpg2unstructured after 0.4.0** (09affc9, found by
+  workflow 9): `morph_pillars` dropped a pillar's whole move when its top
+  target was within `write_tol` of its current top, so the base move was
+  lost too. `adapt_grid(polygon, top_trace="auto")` on a dipping plane
+  whose top trace lies exactly on a pillar line left those pillars vertical
+  and still returned `ok` (90° instead of 45°). Each end is now zeroed on
+  its own; the plane reaches 45.1°, and off-line cases are unchanged.

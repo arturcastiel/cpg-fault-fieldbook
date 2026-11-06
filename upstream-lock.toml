@@ -2,7 +2,7 @@
 [cpg2unstructured]
 repository = "https://github.com/arturcastiel/cpg2python"
 local_directory = "../cpg2python"
-revision = "7d98aebbd64b03ee4623cf0c97e01dd19cda9f5b"
+revision = "09affc9081c4e1d4dd8ba3efac3b1e1975277f25"
 version = "0.4.0"
 
 [fault_projections]

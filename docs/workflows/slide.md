@@ -94,7 +94,8 @@ Method page: [Fault slides](../functions/fault-slide.md).
   pillars, so a vertical fault stays vertical. To slide along a
   dipping fault, tilt it first ([workflow 5](slide-pillars.md)). The
   3D staircase of a dipping fault from [workflow 2](full-3d.md) is
-  refused (`SlideError`).
+  refused (`SlideError`); [workflow 9](slide-3d.md) slides a 3D
+  surface.
 - `hanging_side=None` reads the side from the pillar dip, so a
   vertical fault needs it.
 - The faces that open are the `FAULTS` faces; a face opening anywhere
@@ -109,4 +110,5 @@ Method page: [Fault slides](../functions/fault-slide.md).
 - Slide along a tilted fault: [workflow 5](slide-pillars.md).
 - Tilt and slide in one call: `dip_grid(..., slide=...)`
   ([workflow 6](dip-angle.md)).
+- Slide a fault you have as a 3D surface: [workflow 9](slide-3d.md).
 - Write a deck: [workflow 8](field-deck.md).

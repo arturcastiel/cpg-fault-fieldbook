@@ -34,13 +34,14 @@ the grid before and after, and links to the lessons and sections to read.
 | # | Workflow | Changes | Use it when |
 | --- | --- | --- | --- |
 | 1 | [Stair-step projection](docs/workflows/stair-step.md) | `FAULTS` only | the grid must not move; the fault follows cell edges |
-| 2 | [Full 3D projection](docs/workflows/full-3d.md) | `FAULTS` (X, Y, Z faces) | a dipping surface onto 3D cell faces, with real K ranges; marks faces only, so to slide a dipping fault use 5 ([why](docs/workflows/full-3d.md#can-i-slide-it-afterwards-not-the-staircase)) |
+| 2 | [Full 3D projection](docs/workflows/full-3d.md) | `FAULTS` (X, Y, Z faces) | a dipping surface onto 3D cell faces, with real K ranges; marks faces only; to slide it use 9 ([why](docs/workflows/full-3d.md#can-i-slide-it-afterwards-not-the-staircase)) |
 | 3 | [2D / 2.5D deformation](docs/workflows/deformation.md) | `COORD` | the grid should follow a trace, or tilt into a dipping plane |
 | 4 | [Fault slide](docs/workflows/slide.md) | `ZCORN` | offset the layers across existing `FAULTS` |
 | 5 | [Slide + pillar shift](docs/workflows/slide-pillars.md) | `COORD` + `ZCORN` | a dip-slip: move the pillars, then slide along them |
 | 6 | [Set a dip angle](docs/workflows/dip-angle.md) | `COORD` | tilt a fault to an exact angle |
 | 7 | [Fault zones](docs/workflows/fault-zones.md) | a region (optional: confine 4–6) | find the cells within ±D; keep an edit inside them |
 | 8 | [A field deck, end to end](docs/workflows/field-deck.md) | separate `INCLUDE` files | intake, edit, check and write a real deck |
+| 9 | [Slide a 3D fault surface](docs/workflows/slide-3d.md) | `ZCORN` (+ `COORD` if it dips) | slide a fault given as a 3D surface: vertical as projected, dipping after moving the pillars; horizontal is not possible |
 
 <table>
 <tr>
@@ -51,7 +52,13 @@ the grid before and after, and links to the lessons and sections to read.
 <td valign="top"><a href="docs/workflows/slide-pillars.md"><img src="docs/assets/workflows/ill-5-slide-pillars.png" alt="Slide plus pillar shift before and after"></a><br><b>5.</b> Fit or tilt the pillars, then slide the hanging wall 15 m along them.</td>
 <td valign="top"><a href="docs/workflows/fault-zones.md"><img src="docs/assets/workflows/ill-7-zones.png" alt="Fault zones: selection and a confined dip"></a><br><b>7.</b> 96 + 96 cells within 100 m; a confined dip moves 0 cells outside them.</td>
 </tr>
+<tr>
+<td valign="top"><a href="docs/workflows/slide-3d.md"><img src="docs/assets/workflows/ill-9-slide-3d.png" alt="Slide a 3D fault surface before and after"></a><br><b>9.</b> A vertical 3D fault slides as projected; a dipping staircase is refused until the pillars move (45.0–45.1°, 15.0 m); a horizontal one is refused.</td>
+<td valign="top"><a href="docs/workflows/index.md#what-the-workflows-cannot-do"><img src="docs/assets/workflows/why-pillars.png" alt="Why a slide needs the fault along the pillars"></a><br><b>Limits.</b> A slide moves corners along their pillars, so the fault must lie along them. <a href="docs/workflows/index.md#what-the-workflows-cannot-do">What the workflows cannot do</a>.</td>
+</tr>
 </table>
+
+![Each workflow in one schematic picture](docs/assets/workflows/concepts.png)
 
 ## Examples
 
