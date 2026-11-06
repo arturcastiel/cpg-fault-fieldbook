@@ -120,6 +120,21 @@ by the same amount, so every column keeps its **total** volume. Volume still
 moves between the layers of a column (case A: −21.65 % to +17.32 % in one
 footwall column). The other pivots change column volumes.
 
+![A 60° dip: free, fixed outline and decay](../assets/fault-dip/rigid-vs-decay.png)
+
+*Lesson 31 A.* F is set to 60°, exact at all 9 fault pillars: the grid
+before, then `boundary="free"` (the hanging wall leans as one block, east
+rim included), the default `boundary="fixed"` (the outline holds; the lean
+is released over the last cell), and `decay=300` (the tilt fades out on both
+sides).
+
+![Angle sweep](../assets/fault-dip-stress/32_A_angle_sweep.png)
+
+*Lesson 32 A.* One rim-to-rim fault set to 89, 75, 60, 45, 35 and 30°
+(`boundary="free"`). COORD reads back each angle exactly, and the
+independent cell checker finds 0 broken cells; the worst 3-D Jacobian
+falls from 0.998 to 0.457 as the angle falls.
+
 ### The gate
 
 The dipped grid is checked where cells are. At the top, middle and base of
@@ -165,7 +180,8 @@ fades. If the grid still fails, `on_invalid` decides:
 | `pillar_validity` | `check_validity` of the COORD planes. Informative only: COORD ends may lie off the cells |
 | `volume_change` | `(NX, NY, NZ)` relative change; NaN where inactive |
 | `normals`, `chains`, `hanging_sign`, `faults` | The geometry used |
-| `slide`, `grid_path`, `report_path` | Filled by `dip_deck` |
+| `slide` | The `SlideResult` when `slide=` is given: `slide.grid` is the dipped **and** slid grid, while `grid` stays the dip alone |
+| `grid_path`, `report_path` | Filled by `dip_deck` |
 
 `summary()` gives one line and `report()` a full text report: the before,
 requested and realized angle at every chain pillar.

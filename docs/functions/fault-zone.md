@@ -13,6 +13,12 @@ side. There are two separate features:
 The lesson with every case worked through is
 [9. Fault zones](../learn/fault-zone.md).
 
+![Zone selection around a vertical fault](../assets/fault-zone/33_A_vertical.png)
+
+*Selection.* The cells within 60 m of a vertical fault on x = 300 m:
+120 footwall cells (blue) and 120 hanging-wall cells (orange), exactly those
+with `|x_centre − 300| ≤ 60`. BEFORE is the grid alone; nothing moves.
+
 ## `fault_zone`
 
 ### Syntax
@@ -109,6 +115,19 @@ is measured around the dipped or slid faults on the input grid.
   cells, and the dip or slide is refused (`DipError` or `SlideError`).
 - `DipResult.zone`, `SlideResult.zone`: the zone used. `DipResult.moved`
   marks the cells with a corner that moved.
+
+![A dip over the whole domain and inside a zone](../assets/fault-zone/33_G_confined_dip.png)
+
+*Confined dip (lesson 33 G).* F is set to 60° three ways. Over the whole
+domain, 960 of 1,440 cells move, with the rim fixed (the default) or free.
+With `zone=100`, 480 move and **0** outside the zone; cells that moved are
+outlined in black.
+
+![A slide over the whole domain and inside a zone](../assets/fault-zone/33_H_confined_slide.png)
+
+*Confined slide (lesson 33 H).* A 20 m throw over the whole domain moves 720
+cells, 540 of them outside the zone. With `zone=75`, 180 move and 0 outside.
+The drop is 20 m at the fault and fades to 0 at the zone's edge.
 
 ### Example
 

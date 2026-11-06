@@ -10,6 +10,16 @@ nav:
   - Installation:
       - Windows: start/install-windows.md
       - Linux and WSL: start/install-linux.md
+  - Workflows:
+      - Which workflow?: workflows/index.md
+      - 1 · Stair-step projection: workflows/stair-step.md
+      - 2 · Full 3D projection: workflows/full-3d.md
+      - 3 · 2D / 2.5D deformation: workflows/deformation.md
+      - 4 · Fault slide: workflows/slide.md
+      - 5 · Slide + pillar shift: workflows/slide-pillars.md
+      - "6 · Set a fault's dip angle": workflows/dip-angle.md
+      - 7 · Fault zones: workflows/fault-zones.md
+      - 8 · A field deck, end to end: workflows/field-deck.md
   - Learn:
       - Grid and topology: learn/grids.md
       - Fault projection: learn/faults.md
