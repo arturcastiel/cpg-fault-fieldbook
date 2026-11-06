@@ -15,22 +15,35 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install "cpg2unstructured[fast] @ git+https://github.com/arturcastiel/cpg2python.git@7d98aebbd64b03ee4623cf0c97e01dd19cda9f5b"
-      # fault-projections is private: clone it with a read-only token
-      # (secret FAULT_PROJECTIONS_TOKEN). The URL rewrite lives only in this
-      # step's environment, so the token never reaches pip or disk.
+      # fault-projections is private. Preferred: a read-only deploy key on that
+      # repo (secret FAULT_PROJECTIONS_DEPLOY_KEY), loaded into an ssh-agent from
+      # stdin, with GitHub's published host key pinned. Fallback: a read-only
+      # token (secret FAULT_PROJECTIONS_TOKEN). Neither reaches pip's arguments
+      # or disk, and both exist only in this step.
       - name: Install fault-projections (private)
         shell: bash
         env:
+          FP_KEY: ${{ secrets.FAULT_PROJECTIONS_DEPLOY_KEY }}
           FP_TOKEN: ${{ secrets.FAULT_PROJECTIONS_TOKEN }}
+          FP_REV: 48dd1ece3614b875c524e9a6a6bbefac99ddf5d7
         run: |
-          if [ -z "$FP_TOKEN" ]; then
-            echo "::error::Secret FAULT_PROJECTIONS_TOKEN is not set (read-only token for arturcastiel/fault-projections, see README)."
+          if [ -n "$FP_KEY" ]; then
+            eval "$(ssh-agent -s)" > /dev/null
+            trap 'ssh-agent -k > /dev/null' EXIT
+            printf '%s\n' "$FP_KEY" | ssh-add - 2> /dev/null
+            hosts="$(mktemp)"
+            echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > "$hosts"
+            export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$hosts"
+            python -m pip install "fault-projections @ git+ssh://git@github.com/arturcastiel/fault-projections.git@$FP_REV"
+          elif [ -n "$FP_TOKEN" ]; then
+            export GIT_CONFIG_COUNT=1
+            export GIT_CONFIG_KEY_0="url.https://x-access-token:${FP_TOKEN}@github.com/arturcastiel/fault-projections.insteadOf"
+            export GIT_CONFIG_VALUE_0="https://github.com/arturcastiel/fault-projections"
+            python -m pip install "fault-projections @ git+https://github.com/arturcastiel/fault-projections.git@$FP_REV"
+          else
+            echo "::error::Neither FAULT_PROJECTIONS_DEPLOY_KEY nor FAULT_PROJECTIONS_TOKEN is set (read-only access to arturcastiel/fault-projections, see README)."
             exit 1
           fi
-          export GIT_CONFIG_COUNT=1
-          export GIT_CONFIG_KEY_0="url.https://x-access-token:${FP_TOKEN}@github.com/arturcastiel/fault-projections.insteadOf"
-          export GIT_CONFIG_VALUE_0="https://github.com/arturcastiel/fault-projections"
-          python -m pip install "fault-projections @ git+https://github.com/arturcastiel/fault-projections.git@48dd1ece3614b875c524e9a6a6bbefac99ddf5d7"
       - run: python -m pip install -e ".[test,docs]"
       - run: python -m fieldbook.cli doctor
       - run: python -m pytest -q
