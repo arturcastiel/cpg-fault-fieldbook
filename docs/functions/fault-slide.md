@@ -37,6 +37,19 @@ slide_grid(
   the zone keeps its corners bit for bit. A zone that freezes a corner on the
   fault raises `ZoneError`. `SlideResult.zone` holds the zone used.
 
+![Slide cell gate](../assets/fault-dip-stress/32_Q_slide_cell_gate.png)
+
+*The slide's cell gate (lesson 32 Q).* On leaning pillars, a large throw
+near a fault tip can turn cells inside out while ZCORN stays in order;
+`min_jacobian` refuses it. The full 18 m fits only after
+`dip_grid(slide=...)` widens the fades.
+
+![A slide over the whole domain and inside a zone](../assets/fault-zone/33_H_confined_slide.png)
+
+*A confined slide (lesson 33 H).* A 20 m throw over the whole domain moves
+720 cells, 540 of them outside the zone. With `zone=75`, 180 move and 0
+outside; cells that moved are outlined in black.
+
 `Throw(fault, throw, hanging_side=None, hanging=1.0, profile="cosine",
 taper=None, decay="auto", growth=None, snap=False, name="", layers=None)`
 describes one fault:

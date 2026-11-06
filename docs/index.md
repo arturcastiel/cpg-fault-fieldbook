@@ -2,6 +2,9 @@
 
 Two connected libraries, two kinds of question:
 
+- **What do I want to do?** Pick a [workflow](workflows/index.md): a
+  flowchart per task, from a stair-step projection to a field deck,
+  each with before/after pictures and the lessons to run.
 - **How does this work?** Follow the [numbered lessons](learn/grids.md)
   from a five-by-five toy deck to fault projection, adaptation and four
   independent checks.
@@ -42,3 +45,39 @@ additional dated snapshot. Its file links assume the two upstream
 checkouts are siblings of this repository; for online browsing, use
 the linked upstream repositories instead. No workflow here proves
 simulator acceptance or safe flow/transmissibility behavior.
+
+## Workflows: which call for which task
+
+The [workflows](workflows/index.md) section has one flowchart per task.
+Each points to the calls, the lessons and the sections to read.
+
+![Which workflow? A chooser flowchart](assets/workflows/chooser.png)
+
+![All eight workflows at a glance, before and after](assets/workflows/at-a-glance.png)
+
+## The fault tools in pictures
+
+Each picture shows the grid **BEFORE** and **AFTER**.
+
+**Set a fault's dip** ([lesson](learn/fault-dip.md),
+[method](functions/fault-dip.md)). F is set to 60°, exact at all 9 fault
+pillars. The picture shows the grid before, then three versions:
+`boundary="free"`, the default fixed outline, and `decay=300`.
+
+![A 60° dip: free, fixed outline and decay](assets/fault-dip/rigid-vs-decay.png)
+
+**Select a fault zone** ([lesson](learn/fault-zone.md),
+[method](functions/fault-zone.md)). These are the cells within 50 m of a
+curved fault dipping 65°: the footwall band (−D) in blue and the
+hanging-wall band (+D) in orange. Nothing moves.
+
+![Zone selection around a curved fault](assets/fault-zone/33_D_curved.png)
+
+**Confine a dip to the zone.** The default deforms the whole domain and
+holds the outline. With `zone=100`, only the 480 zone cells move (outlined
+in black), and the 960 cells outside stay bit-identical.
+
+![A dip over the whole domain and inside a zone](assets/fault-zone/33_G_confined_dip.png)
+
+The [stress-test lesson](learn/fault-dip-stress.md) shows 22 more cases,
+each judged by an independent cell checker.

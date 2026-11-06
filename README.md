@@ -23,6 +23,36 @@ On Windows use `.venv\Scripts\python.exe` instead of `.venv/bin/python`
 ([Windows instructions](docs/start/install-windows.md)). The library
 checkouts should be at the revisions in [`upstream-lock.toml`](upstream-lock.toml).
 
+## Workflows
+
+Not sure which call you need? The [workflows](docs/workflows/index.md)
+section has a flowchart per task. Each one names the exact calls, shows
+the grid before and after, and links to the lessons and sections to read.
+
+![Which workflow? A chooser flowchart](docs/assets/workflows/chooser.png)
+
+| # | Workflow | Changes | Use it when |
+| --- | --- | --- | --- |
+| 1 | [Stair-step projection](docs/workflows/stair-step.md) | `FAULTS` only | the grid must not move; the fault follows cell edges |
+| 2 | [Full 3D projection](docs/workflows/full-3d.md) | `FAULTS` (X, Y, Z faces) | a dipping surface onto 3D cell faces, with real K ranges |
+| 3 | [2D / 2.5D deformation](docs/workflows/deformation.md) | `COORD` | the grid should follow a trace, or tilt into a dipping plane |
+| 4 | [Fault slide](docs/workflows/slide.md) | `ZCORN` | offset the layers across existing `FAULTS` |
+| 5 | [Slide + pillar shift](docs/workflows/slide-pillars.md) | `COORD` + `ZCORN` | a dip-slip: move the pillars, then slide along them |
+| 6 | [Set a dip angle](docs/workflows/dip-angle.md) | `COORD` | tilt a fault to an exact angle |
+| 7 | [Fault zones](docs/workflows/fault-zones.md) | a region (optional: confine 4–6) | find the cells within ±D; keep an edit inside them |
+| 8 | [A field deck, end to end](docs/workflows/field-deck.md) | separate `INCLUDE` files | intake, edit, check and write a real deck |
+
+<table>
+<tr>
+<td width="50%" valign="top"><a href="docs/workflows/stair-step.md"><img src="docs/assets/workflows/ill-1-stair-step.png" alt="Stair-step projection before and after"></a><br><b>1.</b> 15 <code>FAULTS</code> faces; no corner moves.</td>
+<td width="50%" valign="top"><a href="docs/workflows/deformation.md"><img src="docs/assets/workflows/ill-3-deformation.png" alt="Deformation before and after"></a><br><b>3.</b> Pillars move onto the trace (stage 1) or tilt into a plane (stage 2).</td>
+</tr>
+<tr>
+<td valign="top"><a href="docs/workflows/slide-pillars.md"><img src="docs/assets/workflows/ill-5-slide-pillars.png" alt="Slide plus pillar shift before and after"></a><br><b>5.</b> Fit or tilt the pillars, then slide the hanging wall 15 m along them.</td>
+<td valign="top"><a href="docs/workflows/fault-zones.md"><img src="docs/assets/workflows/ill-7-zones.png" alt="Fault zones: selection and a confined dip"></a><br><b>7.</b> 96 + 96 cells within 100 m; a confined dip moves 0 cells outside them.</td>
+</tr>
+</table>
+
 ## Examples
 
 Every script in [`examples/`](examples/) runs offline and checks its own
@@ -79,6 +109,69 @@ force ([fault-zone page](docs/learn/fault-zone.md)).
 
 ![Structural styles gallery](docs/assets/gallery/structural-styles.png)
 
+## Fault dip, stress tests and fault zones
+
+Lessons 31–33 cover three `fault_projections` tools:
+
+- **Set a fault's dip** (`dip_grid`, lesson 31). It tilts the fault's
+  pillars to an exact angle, editing COORD only. Neighbouring pillars follow
+  over a fade, and a cell gate refuses any grid with folded or squashed
+  cells. By default the grid's outline is held fixed.
+- **Stress tests** (lesson 32). There are 22 hard cases: curved and
+  S-shaped traces, junctions, a caldera, growth and blind faults, seeded
+  fuzz, and Norne. An independent cell checker re-judges every verdict. It
+  found no accepted grid with broken cells.
+- **Fault zones** (`fault_zone`, lesson 33). The tool selects the cells
+  within −D/+D of each fault, measured to the fault surface, and can export
+  them as a GRDECL keyword. Optionally, `zone=` keeps a dip or a slide
+  inside those cells, and every cell outside stays bit-identical. Without
+  `zone=`, the whole domain deforms and the outline holds.
+
+```python
+from fault_projections import Dip, dip_grid, fault_zone, write_zone
+
+z = fault_zone(grid, faults, 80.0, hanging_side="right")  # cells within -80 m / +80 m
+print(z.summary())                     # footwall + hanging-wall cells, per fault
+write_zone(z, "zone.grdecl")           # FLTZONE: 0 outside, 1 footwall, 2 hanging wall
+res = dip_grid(grid, Dip("F1", 70.0, hanging_side="right"), faults=faults, zone=z)
+```
+
+The [fault-zone method page](docs/functions/fault-zone.md) runs this on a
+small grid and checks every printed number.
+
+Each picture shows the grid **BEFORE** and **AFTER**; click one to open its
+lesson. Zone colours: the footwall band (−D) is blue, the hanging-wall band
+(+D) orange, and cells outside the zone are grey. Cells that moved are
+outlined in black.
+
+<table>
+<tr>
+<td width="50%" valign="top"><a href="docs/learn/fault-dip.md"><img src="docs/assets/fault-dip/rigid-vs-decay.png" alt="A 60 degree dip: free, fixed outline and decay"></a><br><b>Dip.</b> F set to 60°, exact at all 9 pillars: before, then <code>boundary="free"</code>, the default fixed outline, and <code>decay=300</code>.</td>
+<td width="50%" valign="top"><a href="docs/learn/fault-dip-stress.md"><img src="docs/assets/fault-dip-stress/32_C_s_trace_angle_table.png" alt="An S-shaped fault with angle and throw tables"></a><br><b>Stress.</b> An S-shaped fault with angle and throw tables. This case found a 9 m tear in the rigid slide, now fixed.</td>
+</tr>
+<tr>
+<td valign="top"><a href="docs/learn/fault-dip-stress.md"><img src="docs/assets/fault-dip-stress/32_N_dome_ring_caldera.png" alt="A caldera: a ring fault dipped and collapsed"></a><br><b>Stress.</b> A caldera: a ring fault dipped 70° inward and collapsed 25 m all round, with 0 broken cells.</td>
+<td valign="top"><a href="docs/learn/fault-dip-stress.md"><img src="docs/assets/fault-dip-stress/32_U_seeded_fuzz.png" alt="Seeded fuzz of dip, slide and re-dip"></a><br><b>Stress.</b> 40 random grids, dip → slide → re-dip. All 90 accepted steps pass the checker, and none disagrees with it.</td>
+</tr>
+<tr>
+<td valign="top"><a href="docs/learn/fault-zone.md"><img src="docs/assets/fault-zone/33_A_vertical.png" alt="Zone selection around a vertical fault"></a><br><b>Zone, select.</b> The cells within 60 m of a vertical fault: 120 footwall + 120 hanging wall, exactly those with |x − 300| ≤ 60.</td>
+<td valign="top"><a href="docs/learn/fault-zone.md"><img src="docs/assets/fault-zone/33_D_curved.png" alt="Zone selection around a curved dipping fault"></a><br><b>Zone, select.</b> A curved fault dipping 65°, D = 50 m: 158 + 140 cells, matching a brute force to 0.04 m.</td>
+</tr>
+<tr>
+<td valign="top"><a href="docs/learn/fault-zone.md"><img src="docs/assets/fault-zone/33_G_confined_dip.png" alt="A dip over the whole domain and confined to a zone"></a><br><b>Zone, confine a dip.</b> 60° over the whole domain moves 960 cells. With <code>zone=100</code>, 480 move and 0 outside the zone.</td>
+<td valign="top"><a href="docs/learn/fault-zone.md"><img src="docs/assets/fault-zone/33_H_confined_slide.png" alt="A slide over the whole domain and confined to a zone"></a><br><b>Zone, confine a slide.</b> A 20 m slide over the whole domain moves 720 cells, 540 of them outside the zone. With <code>zone=75</code>, 180 move and 0 outside.</td>
+</tr>
+<tr>
+<td valign="top"><a href="docs/learn/fault-zone.md"><img src="docs/assets/fault-zone/33_E_two_faults.png" alt="Zones of two crossing faults"></a><br><b>Zone, two faults.</b> 80 cells lie near both faults; the nearer fault decides their side, and ties go to the first fault listed.</td>
+<td valign="top"><a href="docs/learn/fault-zone.md"><img src="docs/assets/fault-zone/33_K_norne_zones.png" alt="Fault zones on the Norne field deck"></a><br><b>Zone, Norne.</b> 61 faults at D = 100 m: 22,759 + 22,075 cells. Setting E_01 to 60° inside 400 m moves 0 of the 108,203 cells outside the zone.</td>
+</tr>
+</table>
+
+All 37 pictures, with the numbers each case must print, are on the
+[fault-dip](docs/learn/fault-dip.md),
+[stress-test](docs/learn/fault-dip-stress.md) and
+[fault-zone](docs/learn/fault-zone.md) pages.
+
 ## Figures
 
 Regenerate the Z-slide and gallery figures (PNG plus interactive 3D HTML)
@@ -96,6 +189,14 @@ matplotlib):
 
 ```bash
 .venv/bin/python tools/figures/fault_dip.py
+```
+
+The flowcharts and before/after illustrations in `docs/assets/workflows/`
+are drawn by one script. Every number in them is computed with the library
+calls the workflow pages show (about 90 s, needs matplotlib):
+
+```bash
+.venv/bin/python tools/figures/workflows.py
 ```
 
 ## Documentation
